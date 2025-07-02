@@ -52,23 +52,23 @@ const QuizManagement = () => {
       console.log("Fetching courses with token:", token);
       
       // Get all courses from admin API
-      const coursesData = await getAllCourses(token);
-      console.log("Courses data received:", coursesData);
+      const result = await getAllCourses(token);
+      console.log("Courses data received:", result);
       
-      if (!coursesData) {
+      if (!result?.courses) {
         throw new Error("No courses data received");
       }
 
       // Filter courses by category if a category is selected
       console.log("Filtering courses for category:", categoryId);
-      console.log("Available courses:", coursesData);
+      console.log("Available courses:", result.courses);
       
       const filteredCourses = categoryId 
-        ? coursesData.filter(course => {
+        ? result.courses.filter(course => {
             console.log("Course category:", course.category);
             return course.category?._id === categoryId;
           })
-        : coursesData;
+        : result.courses;
 
       console.log("Filtered courses:", filteredCourses);
       setCourses(filteredCourses || []);

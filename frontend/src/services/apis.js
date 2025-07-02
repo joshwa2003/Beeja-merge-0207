@@ -7,6 +7,9 @@ export const endpoints = {
   LOGIN_API: BASE_URL + "/api/v1/auth/login",
   RESETPASSTOKEN_API: BASE_URL + "/api/v1/auth/reset-password-token",
   RESETPASSWORD_API: BASE_URL + "/api/v1/auth/reset-password",
+  // User Analytics
+  USER_ANALYTICS_API: BASE_URL + "/api/v1/user/analytics",
+  USER_ACTIVITY_API: BASE_URL + "/api/v1/user/activity",
 }
 
 // PROFILE ENDPOINTS
@@ -187,4 +190,28 @@ export const faqEndpoints = {
   ANSWER_FAQ_API: BASE_URL + "/api/v1/faqs/answer/:id",
   TOGGLE_FAQ_PUBLISH_API: BASE_URL + "/api/v1/faqs/toggle-publish/:id",
   DELETE_FAQ_API: BASE_URL + "/api/v1/faqs/delete/:id",
+}
+
+// CHAT ENDPOINTS
+export const chatEndpoints = {
+  // Student endpoints
+  INITIATE_CHAT_API: BASE_URL + "/api/v1/chat/initiate",
+  GET_STUDENT_CHATS_API: BASE_URL + "/api/v1/chat/student/chats",
+  
+  // Instructor endpoints
+  GET_INSTRUCTOR_CHATS_API: BASE_URL + "/api/v1/chat/instructor/chats",
+  
+  // Admin endpoints
+  GET_ALL_CHATS_API: BASE_URL + "/api/v1/chat/admin/chats",
+  ARCHIVE_CHAT_API: BASE_URL + "/api/v1/chat/admin/archive",
+  UNARCHIVE_CHAT_API: BASE_URL + "/api/v1/chat/admin/unarchive",
+  FLAG_CHAT_API: BASE_URL + "/api/v1/chat/admin/flag",
+  UNFLAG_CHAT_API: BASE_URL + "/api/v1/chat/admin/unflag",
+  DELETE_CHAT_API: BASE_URL + "/api/v1/chat/admin/delete",
+  HIDE_MESSAGE_API: BASE_URL + "/api/v1/chat/admin/hide-message",
+  
+  // Common endpoints
+  SEND_MESSAGE_API: BASE_URL + "/api/v1/chat/message",
+  GET_CHAT_MESSAGES_API: BASE_URL + "/api/v1/chat/messages",
+  GET_CHAT_DETAILS_API: BASE_URL + "/api/v1/chat/details",
 }

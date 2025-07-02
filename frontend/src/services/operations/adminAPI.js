@@ -314,7 +314,7 @@ export const toggleUserStatus = async (userId, token) => {
 
 // ================ Get All Courses ================
 export const getAllCourses = async (token) => {
-  let result = []
+  let result = { courses: [] }
   const toastId = toast.loading("Loading courses...")
 
   try {
@@ -331,13 +331,14 @@ export const getAllCourses = async (token) => {
       throw new Error(error)
     }
     
-    result = response?.data?.courses
-    if (!result) {
+    const courses = response?.data?.courses
+    if (!courses) {
       console.error("No courses data in response")
       throw new Error("No courses data received")
     }
     
-    console.log("Fetched courses:", result)
+    result = { courses }
+    console.log("Fetched courses:", courses)
   } catch (error) {
     console.error("GET_ALL_COURSES_API ERROR:", {
       message: error.message,
@@ -383,7 +384,7 @@ export const approveCourse = async (courseId, token) => {
       throw new Error("No course data received in response")
     }
 
-    toast.success("Course approved successfully")
+    
     result = response.data.course
   } catch (error) {
     console.error("APPROVE_COURSE_API ERROR:", {

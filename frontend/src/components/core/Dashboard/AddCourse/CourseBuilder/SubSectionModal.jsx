@@ -63,7 +63,7 @@ export default function SubSectionModal({ modalData, setModalData, add = false, 
         formData.append("description", currentValues.lectureDesc)
       }
       if (currentValues.lectureVideo !== modalData.videoUrl) {
-        formData.append("video", currentValues.lectureVideo)
+        formData.append("videoFile", currentValues.lectureVideo)
       }
       
       const result = await updateSubSection(formData, token)
@@ -144,7 +144,7 @@ export default function SubSectionModal({ modalData, setModalData, add = false, 
           )
           const updatedCourse = { ...course, courseContent: updatedCourseContent }
           dispatch(setCourse(updatedCourse))
-          toast.success("Lecture added successfully")
+          
           setModalData(null)
         }
       } catch (error) {

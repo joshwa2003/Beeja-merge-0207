@@ -12,11 +12,11 @@ const CourseList = ({ categoryId, onCourseSelect }) => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const allCourses = await getAllCourses(token);
+        const result = await getAllCourses(token);
         // Filter courses by category
-        const coursesData = allCourses.filter(course => 
+        const coursesData = result?.courses?.filter(course => 
           course.category._id === categoryId
-        );
+        ) || [];
         setCourses(coursesData);
       } catch (error) {
         console.error("Error fetching courses:", error);

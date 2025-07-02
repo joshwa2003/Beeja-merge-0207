@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useSelector } from 'react-redux'
-import { FiBook, FiUser, FiDollarSign, FiTag, FiSettings, FiSearch, FiFilter, FiCalendar } from 'react-icons/fi'
+import { FiBook, FiUser, FiDollarSign, FiTag, FiSettings, FiSearch, FiFilter, FiCalendar, FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 import { getAllCourses, setCourseType } from '../../../../services/operations/adminAPI'
 import { formatDate, getRelativeTime } from '../../../../utils/dateFormatter'
 import toast from 'react-hot-toast'
@@ -42,8 +42,8 @@ export default function CourseTypeManager() {
     setLoading(true)
     try {
       const result = await getAllCourses(token)
-      if (result) {
-        setCourses(result)
+      if (result?.courses) {
+        setCourses(result.courses)
       }
     } catch (error) {
       toast.error('Failed to fetch courses')
