@@ -77,6 +77,7 @@ export const generateOrdersPDF = async (token) => {
       {
         Authorization: `Bearer ${token}`,
       },
+      null,
       { responseType: "blob" }
     )
     

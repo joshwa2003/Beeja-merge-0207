@@ -73,6 +73,60 @@ function Catalog() {
             </div>)
     }
 
+    // Check if we have valid data but no courses
+    if (!loading && catalogPageData && (!catalogPageData.selectedCategory?.courses || catalogPageData.selectedCategory.courses.length === 0)) {
+        return (
+            <>
+                {/* Background with Gradient and Particles */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1 }}
+                    className="relative z-0"
+                >
+                    <BackgroundEffect />
+                </motion.div>
+
+                {/* Hero Section */}
+                <div className="relative box-content bg-richblack-800 px-4 sm:px-6 lg:px-8 z-10">
+                    <div className="mx-auto flex min-h-[180px] sm:min-h-[220px] md:min-h-[240px] lg:min-h-[260px] max-w-maxContentTab flex-col justify-center gap-3 sm:gap-4 lg:max-w-maxContent">
+                        <p className="text-xs sm:text-sm md:text-base text-richblack-300">
+                            {`Home / Catalog / `}
+                            <span className="text-yellow-25">
+                                {catalogPageData?.selectedCategory?.name}
+                            </span>
+                        </p>
+                        <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-richblack-5 leading-tight sm:leading-snug">
+                            {catalogPageData?.selectedCategory?.name}
+                        </p>
+                        <p className="max-w-[600px] sm:max-w-[700px] lg:max-w-[870px] text-sm sm:text-base md:text-lg lg:text-xl text-richblack-200 leading-relaxed sm:leading-relaxed md:leading-loose">
+                            {catalogPageData?.selectedCategory?.description}
+                        </p>
+                    </div>
+                </div>
+
+                {/* No Courses Message */}
+                <div className="mx-auto box-content w-full max-w-maxContentTab px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 lg:max-w-maxContent">
+                    <div className="text-center py-16">
+                        <div className="text-6xl mb-4">📚</div>
+                        <h2 className="text-2xl font-bold text-richblack-5 mb-4">No Courses Available Yet</h2>
+                        <p className="text-richblack-300 mb-6">
+                            Courses for this category are coming soon. Please check back later or explore other categories.
+                        </p>
+                        <button 
+                            onClick={() => window.history.back()} 
+                            className="bg-yellow-50 text-richblack-900 px-6 py-3 rounded-lg font-medium hover:bg-yellow-100 transition-colors"
+                        >
+                            Go Back
+                        </button>
+                    </div>
+                </div>
+
+                <ImprovedFooter />
+            </>
+        )
+    }
+
 
 
     return (

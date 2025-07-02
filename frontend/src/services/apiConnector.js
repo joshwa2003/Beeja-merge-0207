@@ -7,14 +7,15 @@ export const axiosInstance = axios.create({
     }
 });
 
-export const apiConnector = (method, url, bodyData, headers, params) => {
+export const apiConnector = (method, url, bodyData, headers, params, config = {}) => {
     // Debug logging
     console.log('API Request:', {
         method,
         url,
         bodyData,
         headers,
-        params
+        params,
+        config
     });
 
     // Determine if we're sending FormData (for file uploads)
@@ -40,7 +41,8 @@ export const apiConnector = (method, url, bodyData, headers, params) => {
             ...headers
         },
         params: params ? params : null,
-        withCredentials: true
+        withCredentials: true,
+        ...config  // Spread additional axios config options like responseType
     }).then(response => {
         console.log('API Response:', {
             url,

@@ -248,10 +248,23 @@ exports.toggleCourseVisibility = async (req, res) => {
         }
 
         const wasPublished = course.status === 'Published';
+        const wasVisible = course.isVisible;
+        
+        // Toggle visibility
         course.isVisible = !course.isVisible;
+        
+        // When making visible, always set to Published
+        // When hiding, set to Draft
         course.status = course.isVisible ? 'Published' : 'Draft';
 
         await course.save();
+
+        console.log(`Course ${course.courseName} visibility toggled:`, {
+            isVisible: course.isVisible,
+            status: course.status,
+            wasPublished,
+            wasVisible
+        });
 
         // Send notifications when course is made visible/published for the first time
         if (course.isVisible && !wasPublished) {
@@ -270,7 +283,7 @@ exports.toggleCourseVisibility = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: `Course ${course.isVisible ? 'visible' : 'hidden'} successfully`,
+            message: `Course ${course.isVisible ? 'published and visible' : 'hidden'} successfully`,
             course: updatedCourse
         });
     } catch (error) {

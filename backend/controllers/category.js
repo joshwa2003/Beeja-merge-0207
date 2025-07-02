@@ -225,22 +225,40 @@ exports.showAllCategories = async (req, res) => {
 
 exports.getCategoryPageDetails = async (req, res) => {
     try {
-        const { categoryId } = req.body
+        console.log('=== getCategoryPageDetails START ===');
+        const { categoryId } = req.body;
+        console.log('Request categoryId:', categoryId);
+
+        if (!categoryId) {
+            console.log('ERROR: No categoryId provided');
+            return res.status(400).json({ 
+                success: false, 
+                message: "Category ID is required" 
+            });
+        }
 
         // First get the category
+        console.log('Fetching category with ID:', categoryId);
         const selectedCategory = await Category.findById(categoryId).lean();
 
         if (!selectedCategory) {
-            return res.status(404).json({ success: false, message: "Category not found" });
+            console.log('ERROR: Category not found for ID:', categoryId);
+            return res.status(404).json({ 
+                success: false, 
+                message: "Category not found" 
+            });
         }
 
-        console.log('Selected category found:', selectedCategory ? 'Yes' : 'No');
-        console.log('Course IDs in category:', selectedCategory?.courses?.length || 0);
+        console.log('Selected category found:', {
+            id: selectedCategory._id,
+            name: selectedCategory.name,
+            coursesCount: selectedCategory?.courses?.length || 0
+        });
 
         // Get courses that match the criteria
         console.log('Searching for courses with IDs:', selectedCategory.courses);
         const courses = await Course.find({
-            _id: { $in: selectedCategory.courses },
+            _id: { $in: selectedCategory.courses || [] },
             status: "Published",
             isVisible: true
         })
@@ -268,16 +286,12 @@ exports.getCategoryPageDetails = async (req, res) => {
 
         console.log('Found matching courses:', courses.length);
         if (courses.length > 0) {
-            console.log('First course raw data:', JSON.stringify(courses[0], null, 2));
-            console.log('First course details:', {
+            console.log('Sample course details:', {
                 id: courses[0]._id,
                 name: courses[0].courseName,
-                description: courses[0].courseDescription,
-                instructor: courses[0].instructor,
-                category: courses[0].category,
-                price: courses[0].price,
                 status: courses[0].status,
-                isVisible: courses[0].isVisible
+                isVisible: courses[0].isVisible,
+                instructor: courses[0].instructor?.firstName + ' ' + courses[0].instructor?.lastName
             });
         }
 
@@ -285,52 +299,89 @@ exports.getCategoryPageDetails = async (req, res) => {
         selectedCategory.courses = courses;
 
         if (selectedCategory.courses.length === 0) {
-            return res.status(404).json({
-                success: false,
-                data: null,
+            console.log('WARNING: No published/visible courses found for category');
+            return res.status(200).json({
+                success: true,
+                data: {
+                    selectedCategory: {
+                        ...selectedCategory,
+                        courses: []
+                    },
+                    differentCategory: {
+                        _id: null,
+                        name: "Other Courses",
+                        description: "Explore other available courses",
+                        courses: []
+                    },
+                    mostSellingCourses: []
+                },
                 message: "No courses found for the selected category.",
-            })
+            });
         }
 
         const categoriesExceptSelected = await Category.find({
             _id: { $ne: categoryId },
         }).lean()
 
-        // Get a different category
-        let differentCategory = await Category.findOne(
-            categoriesExceptSelected[getRandomInt(categoriesExceptSelected.length)]._id
-        ).lean();
+        // Get a different category with error handling
+        let differentCategory = null;
+        let differentCategoryCourses = [];
+        
+        if (categoriesExceptSelected.length > 0) {
+            try {
+                const randomIndex = getRandomInt(categoriesExceptSelected.length);
+                differentCategory = await Category.findById(
+                    categoriesExceptSelected[randomIndex]._id
+                ).lean();
 
-        // Get courses for different category
-        const differentCategoryCourses = await Course.find({
-            _id: { $in: differentCategory.courses },
-            status: "Published",
-            isVisible: true
-        })
-        .populate([
-            {
-                path: "instructor",
-                select: "firstName lastName email"
-            },
-            {
-                path: "ratingAndReviews"
-            },
-            {
-                path: "category",
-                select: "name"
-            },
-            {
-                path: "courseContent",
-                populate: {
-                    path: "subSection",
-                    select: "timeDuration"
+                if (differentCategory && differentCategory.courses && differentCategory.courses.length > 0) {
+                    // Get courses for different category
+                    differentCategoryCourses = await Course.find({
+                        _id: { $in: differentCategory.courses },
+                        status: "Published",
+                        isVisible: true
+                    })
+                    .populate([
+                        {
+                            path: "instructor",
+                            select: "firstName lastName email"
+                        },
+                        {
+                            path: "ratingAndReviews"
+                        },
+                        {
+                            path: "category",
+                            select: "name"
+                        },
+                        {
+                            path: "courseContent",
+                            populate: {
+                                path: "subSection",
+                                select: "timeDuration"
+                            }
+                        }
+                    ])
+                    .lean();
                 }
+            } catch (error) {
+                console.error('Error fetching different category:', error);
+                differentCategory = null;
+                differentCategoryCourses = [];
             }
-        ])
-        .lean();
+        }
 
         // Replace course IDs with actual course objects
-        differentCategory.courses = differentCategoryCourses;
+        if (differentCategory) {
+            differentCategory.courses = differentCategoryCourses;
+        } else {
+            // Create a fallback empty category
+            differentCategory = {
+                _id: null,
+                name: "Other Courses",
+                description: "Explore other available courses",
+                courses: []
+            };
+        }
 
         // Get all categories
         const allCategories = await Category.find().lean();
