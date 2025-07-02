@@ -78,6 +78,20 @@ const QuizView = () => {
     }
   }, [quizStarted, timeRemaining])
 
+  // Function to check if shuffled array is in different order than original
+  const isShuffledDifferent = (original, shuffled) => {
+    return !shuffled.every((item, index) => item.originalIndex === index);
+  }
+
+  // Function to shuffle array until it's in a different order
+  const shuffleUntilDifferent = (array) => {
+    let shuffled;
+    do {
+      shuffled = [...array].sort(() => Math.random() - 0.5);
+    } while (!isShuffledDifferent(array, shuffled));
+    return shuffled;
+  }
+
   // Initialize shuffled answers for match the following questions
   useEffect(() => {
     if (quizData && quizData.questions) {
@@ -85,9 +99,15 @@ const QuizView = () => {
       quizData.questions.forEach(question => {
         if (question.questionType === 'matchTheFollowing') {
           const answersToShow = question.answers || question.options
-          const shuffled = [...answersToShow]
-            .map((answer, index) => ({ answer, originalIndex: index, letter: String.fromCharCode(65 + index) }))
-            .sort(() => Math.random() - 0.5)
+          const mappedAnswers = answersToShow
+            .map((answer, index) => ({ 
+              answer, 
+              originalIndex: index, 
+              letter: String.fromCharCode(65 + index) 
+            }))
+          
+          // Shuffle until we get a different order than original
+          const shuffled = shuffleUntilDifferent(mappedAnswers)
           newShuffledAnswers[question._id] = shuffled
         }
       })
@@ -137,9 +157,15 @@ const QuizView = () => {
         quiz.questions.forEach(question => {
           if (question.questionType === 'matchTheFollowing') {
             const answersToShow = question.answers || question.options
-            const shuffled = [...answersToShow]
-              .map((answer, index) => ({ answer, originalIndex: index, letter: String.fromCharCode(65 + index) }))
-              .sort(() => Math.random() - 0.5)
+            const mappedAnswers = answersToShow
+              .map((answer, index) => ({ 
+                answer, 
+                originalIndex: index, 
+                letter: String.fromCharCode(65 + index) 
+              }))
+            
+            // Shuffle until we get a different order than original
+            const shuffled = shuffleUntilDifferent(mappedAnswers)
             newShuffledAnswers[question._id] = shuffled
           }
         })

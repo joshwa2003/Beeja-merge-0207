@@ -600,9 +600,19 @@ exports.submitQuiz = async (req, res) => {
                 isAnswered = answer !== undefined && answer !== null && 
                            (typeof answer === 'string' ? answer.trim() !== '' : true);
                 
-                // For text answers, give full marks (manual grading can be implemented later)
-                if (isAnswered) {
-                    isCorrect = true;
+                // For short answer questions, check if at least 50% of keywords match
+                if (isAnswered && question.questionType === 'shortAnswer') {
+                  if (!question.keywords || question.keywords.length === 0) {
+                    isCorrect = true; // If no keywords defined, consider it correct
+                  } else {
+                    const studentAnswer = answer.toLowerCase();
+                    const matchedKeywords = question.keywords.filter(keyword => 
+                      studentAnswer.includes(keyword.toLowerCase())
+                    );
+                    isCorrect = matchedKeywords.length >= Math.ceil(question.keywords.length * 0.5);
+                  }
+                } else if (isAnswered) {
+                  isCorrect = true; // For other text answers (like longAnswer)
                 }
             }
 
