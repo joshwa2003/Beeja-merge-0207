@@ -67,7 +67,7 @@ const otpTemplate = (otp, name) => {
 	<body>
 		<div class="container">
 			<a href=""><img class="logo"
-					src="cid:beeja-logo" alt="Beeja Logo"></a>
+					src="cid:beeja-logo" alt="Beeja Innovative Ventures"></a>
 			<div class="message">OTP Verification Email</div>
 			<div class="body">
 				<p>Dear ${name}</p>

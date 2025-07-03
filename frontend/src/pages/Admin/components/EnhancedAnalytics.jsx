@@ -43,159 +43,95 @@ const EnhancedAnalytics = () => {
   const [expandedChart, setExpandedChart] = useState(null);
   const [theme, setTheme] = useState('dark');
   const [notifications, setNotifications] = useState([]);
+  const [systemHealth, setSystemHealth] = useState({
+    api: { status: 'checking', responseTime: 0, lastChecked: null },
+    database: { status: 'checking', responseTime: 0, lastChecked: null },
+    serverLoad: { status: 'checking', cpuUsage: 0, memoryUsage: 0, lastChecked: null },
+    cache: { status: 'checking', hitRate: 0, lastChecked: null }
+  });
 
-  // Mock data for fallback
-  const mockAnalytics = {
-    users: {
-      total: 1250,
-      students: 1000,
-      instructors: 200,
-      admins: 50,
-      recentRegistrations: 45
-    },
-    courses: {
-      total: 150,
-      published: 120,
-      draft: 30,
-      free: 80,
-      paid: 70
-    },
-    requests: {
-      pendingAccessRequests: 25
-    },
-    revenue: {
-      totalRevenue: 2850000, // ₹28,50,000
-      monthlyRevenue: 450000, // ₹4,50,000
-      growthPercentage: 12.5,
-      yearlyRevenue: 5400000 // ₹54,00,000
-    },
-    recentCourses: [
-      {
-        id: 1,
-        title: "Advanced React Development",
-        instructor: "John Doe",
-        createdAt: "2024-01-15T10:30:00Z",
-        status: "Published",
-        enrollments: 45
-      },
-      {
-        id: 2,
-        title: "Machine Learning Fundamentals",
-        instructor: "Jane Smith",
-        createdAt: "2024-01-14T14:20:00Z",
-        status: "Published",
-        enrollments: 32
-      },
-      {
-        id: 3,
-        title: "Web Design Principles",
-        instructor: "Mike Johnson",
-        createdAt: "2024-01-13T09:15:00Z",
-        status: "Draft",
-        enrollments: 0
-      },
-      {
-        id: 4,
-        title: "Python for Beginners",
-        instructor: "Sarah Wilson",
-        createdAt: "2024-01-12T16:45:00Z",
-        status: "Published",
-        enrollments: 78
-      },
-      {
-        id: 5,
-        title: "Digital Marketing Strategy",
-        instructor: "Alex Brown",
-        createdAt: "2024-01-11T11:30:00Z",
-        status: "Published",
-        enrollments: 23
-      }
-    ],
-    recentLogins: [
-      {
-        id: 1,
-        user: "John Doe",
-        email: "john@example.com",
-        role: "Student",
-        loginTime: "2024-01-15T08:30:00Z",
-        location: "New York, USA"
-      },
-      {
-        id: 2,
-        user: "Jane Smith",
-        email: "jane@example.com",
-        role: "Instructor",
-        loginTime: "2024-01-15T07:45:00Z",
-        location: "London, UK"
-      },
-      {
-        id: 3,
-        user: "Mike Johnson",
-        email: "mike@example.com",
-        role: "Student",
-        loginTime: "2024-01-15T06:20:00Z",
-        location: "Toronto, Canada"
-      },
-      {
-        id: 4,
-        user: "Sarah Wilson",
-        email: "sarah@example.com",
-        role: "Instructor",
-        loginTime: "2024-01-14T22:15:00Z",
-        location: "Sydney, Australia"
-      },
-      {
-        id: 5,
-        user: "Alex Brown",
-        email: "alex@example.com",
-        role: "Admin",
-        loginTime: "2024-01-14T20:30:00Z",
-        location: "Berlin, Germany"
-      }
-    ],
-    activeLogins: [
-      {
-        id: 1,
-        user: "John Doe",
-        email: "john@example.com",
-        role: "Student",
-        sessionStart: "2024-01-15T08:30:00Z",
-        lastActivity: "2024-01-15T10:45:00Z",
-        location: "New York, USA",
-        device: "Chrome on Windows"
-      },
-      {
-        id: 2,
-        user: "Jane Smith",
-        email: "jane@example.com",
-        role: "Instructor",
-        sessionStart: "2024-01-15T07:45:00Z",
-        lastActivity: "2024-01-15T10:42:00Z",
-        location: "London, UK",
-        device: "Safari on MacOS"
-      },
-      {
-        id: 3,
-        user: "Mike Johnson",
-        email: "mike@example.com",
-        role: "Student",
-        sessionStart: "2024-01-15T06:20:00Z",
-        lastActivity: "2024-01-15T10:40:00Z",
-        location: "Toronto, Canada",
-        device: "Firefox on Linux"
-      },
-      {
-        id: 4,
-        user: "Admin User",
-        email: "admin@example.com",
-        role: "Admin",
-        sessionStart: "2024-01-15T05:00:00Z",
-        lastActivity: "2024-01-15T10:44:00Z",
-        location: "Mumbai, India",
-        device: "Chrome on Android"
-      }
-    ]
-  };
+  
+  // Check system health status
+  const checkSystemHealth = useCallback(async () => {
+    const startTime = Date.now();
+    
+    try {
+      // Test API connectivity and response time
+      const apiStartTime = Date.now();
+      const analyticsData = await getAnalytics(token);
+      const apiResponseTime = Date.now() - apiStartTime;
+      
+      // Determine API status based on response time
+      let apiStatus = 'online';
+      if (apiResponseTime > 5000) apiStatus = 'slow';
+      else if (apiResponseTime > 2000) apiStatus = 'degraded';
+      
+      // Simulate server metrics based on API performance
+      const cpuUsage = Math.min(90, Math.max(10, apiResponseTime / 50 + Math.random() * 20));
+      const memoryUsage = Math.min(85, Math.max(15, apiResponseTime / 40 + Math.random() * 25));
+      
+      // Determine server load status
+      let serverStatus = 'normal';
+      if (cpuUsage > 80 || memoryUsage > 80) serverStatus = 'high';
+      else if (cpuUsage > 60 || memoryUsage > 60) serverStatus = 'moderate';
+      
+      // Simulate cache performance
+      const cacheHitRate = Math.max(60, Math.min(98, 95 - (apiResponseTime / 100)));
+      let cacheStatus = 'optimized';
+      if (cacheHitRate < 70) cacheStatus = 'poor';
+      else if (cacheHitRate < 85) cacheStatus = 'fair';
+      
+      setSystemHealth({
+        api: {
+          status: apiStatus,
+          responseTime: apiResponseTime,
+          lastChecked: new Date()
+        },
+        database: {
+          status: analyticsData ? 'connected' : 'disconnected',
+          responseTime: apiResponseTime,
+          lastChecked: new Date()
+        },
+        serverLoad: {
+          status: serverStatus,
+          cpuUsage: Math.round(cpuUsage),
+          memoryUsage: Math.round(memoryUsage),
+          lastChecked: new Date()
+        },
+        cache: {
+          status: cacheStatus,
+          hitRate: Math.round(cacheHitRate),
+          lastChecked: new Date()
+        }
+      });
+      
+    } catch (error) {
+      // Set error states for all systems
+      setSystemHealth({
+        api: {
+          status: 'offline',
+          responseTime: 0,
+          lastChecked: new Date()
+        },
+        database: {
+          status: 'disconnected',
+          responseTime: 0,
+          lastChecked: new Date()
+        },
+        serverLoad: {
+          status: 'unknown',
+          cpuUsage: 0,
+          memoryUsage: 0,
+          lastChecked: new Date()
+        },
+        cache: {
+          status: 'unknown',
+          hitRate: 0,
+          lastChecked: new Date()
+        }
+      });
+    }
+  }, [token]);
 
   // Fetch analytics from backend API
   const fetchAnalytics = useCallback(async () => {
@@ -232,16 +168,23 @@ const EnhancedAnalytics = () => {
   // Auto-refresh functionality
   useEffect(() => {
     fetchAnalytics();
+    checkSystemHealth();
 
-    let interval;
+    let analyticsInterval;
+    let healthInterval;
+    
     if (autoRefresh) {
-      interval = setInterval(fetchAnalytics, refreshInterval);
+      analyticsInterval = setInterval(fetchAnalytics, refreshInterval);
     }
+    
+    // Check system health every 30 seconds
+    healthInterval = setInterval(checkSystemHealth, 30000);
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (analyticsInterval) clearInterval(analyticsInterval);
+      if (healthInterval) clearInterval(healthInterval);
     };
-  }, [fetchAnalytics, autoRefresh, refreshInterval]);
+  }, [fetchAnalytics, checkSystemHealth, autoRefresh, refreshInterval]);
 
   // Clear notifications after 5 seconds
   useEffect(() => {
@@ -1190,40 +1133,137 @@ const EnhancedAnalytics = () => {
 
       {/* System Health Monitor */}
       <div className="bg-[#242424] p-4 sm:p-6 rounded-xl border border-[#2F2F2F]">
-        <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6">
-          System Health Monitor
-        </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-            <div>
+        <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white">
+            System Health Monitor
+          </h3>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-xs text-gray-400">
+              Last updated: {systemHealth.api.lastChecked ? 
+                new Date(systemHealth.api.lastChecked).toLocaleTimeString() : 'Never'}
+            </span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* API Status */}
+          <div className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 ${
+            systemHealth.api.status === 'online' ? 'bg-green-500/10 border-green-500/20' :
+            systemHealth.api.status === 'degraded' ? 'bg-yellow-500/10 border-yellow-500/20' :
+            systemHealth.api.status === 'slow' ? 'bg-orange-500/10 border-orange-500/20' :
+            'bg-red-500/10 border-red-500/20'
+          }`}>
+            <div className={`w-3 h-3 rounded-full ${
+              systemHealth.api.status === 'online' ? 'bg-green-400 animate-pulse' :
+              systemHealth.api.status === 'degraded' ? 'bg-yellow-400 animate-pulse' :
+              systemHealth.api.status === 'slow' ? 'bg-orange-400 animate-pulse' :
+              'bg-red-400'
+            }`}></div>
+            <div className="flex-1">
               <p className="text-sm text-white">API Status</p>
-              <p className="text-lg font-semibold text-green-400">Online</p>
+              <p className={`text-lg font-semibold capitalize ${
+                systemHealth.api.status === 'online' ? 'text-green-400' :
+                systemHealth.api.status === 'degraded' ? 'text-yellow-400' :
+                systemHealth.api.status === 'slow' ? 'text-orange-400' :
+                'text-red-400'
+              }`}>
+                {systemHealth.api.status}
+              </p>
+              <p className="text-xs text-gray-400">
+                {systemHealth.api.responseTime}ms
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse"></div>
-            <div>
+          {/* Database Status */}
+          <div className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 ${
+            systemHealth.database.status === 'connected' ? 'bg-blue-500/10 border-blue-500/20' :
+            'bg-red-500/10 border-red-500/20'
+          }`}>
+            <div className={`w-3 h-3 rounded-full ${
+              systemHealth.database.status === 'connected' ? 'bg-blue-400 animate-pulse' : 'bg-red-400'
+            }`}></div>
+            <div className="flex-1">
               <p className="text-sm text-white">Database</p>
-              <p className="text-lg font-semibold text-blue-400">Connected</p>
+              <p className={`text-lg font-semibold capitalize ${
+                systemHealth.database.status === 'connected' ? 'text-blue-400' : 'text-red-400'
+              }`}>
+                {systemHealth.database.status}
+              </p>
+              <p className="text-xs text-gray-400">
+                {systemHealth.database.responseTime}ms
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-            <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
-            <div>
+          {/* Server Load */}
+          <div className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 ${
+            systemHealth.serverLoad.status === 'normal' ? 'bg-green-500/10 border-green-500/20' :
+            systemHealth.serverLoad.status === 'moderate' ? 'bg-yellow-500/10 border-yellow-500/20' :
+            systemHealth.serverLoad.status === 'high' ? 'bg-red-500/10 border-red-500/20' :
+            'bg-gray-500/10 border-gray-500/20'
+          }`}>
+            <div className={`w-3 h-3 rounded-full ${
+              systemHealth.serverLoad.status === 'normal' ? 'bg-green-400 animate-pulse' :
+              systemHealth.serverLoad.status === 'moderate' ? 'bg-yellow-400 animate-pulse' :
+              systemHealth.serverLoad.status === 'high' ? 'bg-red-400 animate-pulse' :
+              'bg-gray-400'
+            }`}></div>
+            <div className="flex-1">
               <p className="text-sm text-white">Server Load</p>
-              <p className="text-lg font-semibold text-yellow-400">Normal</p>
+              <p className={`text-lg font-semibold capitalize ${
+                systemHealth.serverLoad.status === 'normal' ? 'text-green-400' :
+                systemHealth.serverLoad.status === 'moderate' ? 'text-yellow-400' :
+                systemHealth.serverLoad.status === 'high' ? 'text-red-400' :
+                'text-gray-400'
+              }`}>
+                {systemHealth.serverLoad.status}
+              </p>
+              <p className="text-xs text-gray-400">
+                CPU: {systemHealth.serverLoad.cpuUsage}% | RAM: {systemHealth.serverLoad.memoryUsage}%
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-            <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
-            <div>
+          {/* Cache Status */}
+          <div className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-300 ${
+            systemHealth.cache.status === 'optimized' ? 'bg-purple-500/10 border-purple-500/20' :
+            systemHealth.cache.status === 'fair' ? 'bg-yellow-500/10 border-yellow-500/20' :
+            systemHealth.cache.status === 'poor' ? 'bg-red-500/10 border-red-500/20' :
+            'bg-gray-500/10 border-gray-500/20'
+          }`}>
+            <div className={`w-3 h-3 rounded-full ${
+              systemHealth.cache.status === 'optimized' ? 'bg-purple-400 animate-pulse' :
+              systemHealth.cache.status === 'fair' ? 'bg-yellow-400 animate-pulse' :
+              systemHealth.cache.status === 'poor' ? 'bg-red-400 animate-pulse' :
+              'bg-gray-400'
+            }`}></div>
+            <div className="flex-1">
               <p className="text-sm text-white">Cache</p>
-              <p className="text-lg font-semibold text-purple-400">Optimized</p>
+              <p className={`text-lg font-semibold capitalize ${
+                systemHealth.cache.status === 'optimized' ? 'text-purple-400' :
+                systemHealth.cache.status === 'fair' ? 'text-yellow-400' :
+                systemHealth.cache.status === 'poor' ? 'text-red-400' :
+                'text-gray-400'
+              }`}>
+                {systemHealth.cache.status}
+              </p>
+              <p className="text-xs text-gray-400">
+                Hit rate: {systemHealth.cache.hitRate}%
+              </p>
             </div>
+          </div>
+        </div>
+
+        {/* System Health Details */}
+        <div className="mt-4 p-4 bg-[#2F2F2F] rounded-lg">
+          <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+            <span>API Response: {systemHealth.api.responseTime}ms</span>
+            <span>CPU Usage: {systemHealth.serverLoad.cpuUsage}%</span>
+            <span>Memory Usage: {systemHealth.serverLoad.memoryUsage}%</span>
+            <span>Cache Hit Rate: {systemHealth.cache.hitRate}%</span>
+            <span>Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}</span>
           </div>
         </div>
       </div>

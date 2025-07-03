@@ -245,19 +245,263 @@ exports.resetPassword = async (req, res) => {
                 user.email,
                 'Password Successfully Reset - Beeja Learning Platform',
                 `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #333;">Password Reset Successful</h2>
-                    <p>Hello ${user.firstName || 'User'},</p>
-                    <p>Your password has been successfully reset for your Beeja Learning Platform account.</p>
-                    <p>If you did not make this change, please contact our support team immediately.</p>
-                    <p>For security reasons, you may want to:</p>
-                    <ul>
-                        <li>Log in with your new password</li>
-                        <li>Review your account activity</li>
-                        <li>Update your security settings</li>
-                    </ul>
-                    <p>Thank you for using Beeja Learning Platform!</p>
-                </div>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Password Reset Successful - Beeja Learning Platform</title>
+                    <style>
+                        body {
+                            background-color: #f8f9fa;
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            font-size: 16px;
+                            line-height: 1.6;
+                            color: #333333;
+                            margin: 0;
+                            padding: 0;
+                        }
+                
+                        .container {
+                            max-width: 600px;
+                            margin: 0 auto;
+                            background-color: #ffffff;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                            overflow: hidden;
+                        }
+
+                        .header {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                            padding: 30px 20px;
+                            text-align: center;
+                            position: relative;
+                        }
+
+                        .header::after {
+                            content: '';
+                            position: absolute;
+                            bottom: -10px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            width: 60px;
+                            height: 5px;
+                            background: linear-gradient(90deg, #667eea, #764ba2);
+                            border-radius: 10px;
+                        }
+
+                        .logo {
+                            max-width: 180px;
+                            margin-bottom: 20px;
+                            border-radius: 10px;
+                            padding: 10px;
+                            background: rgba(255, 255, 255, 0.1);
+                            backdrop-filter: blur(5px);
+                        }
+
+                        .header h1 {
+                            margin: 0;
+                            font-size: 28px;
+                            font-weight: 600;
+                            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                        }
+
+                        .content {
+                            padding: 40px 30px;
+                        }
+                
+                        .greeting {
+                            font-size: 20px;
+                            font-weight: 600;
+                            margin-bottom: 25px;
+                            color: #2c3e50;
+                            border-bottom: 2px solid #eee;
+                            padding-bottom: 15px;
+                        }
+                
+                        .message {
+                            font-size: 16px;
+                            margin-bottom: 25px;
+                            color: #555;
+                            line-height: 1.8;
+                        }
+
+                        .success-notice {
+                            background-color: #d4edda;
+                            border: 1px solid #c3e6cb;
+                            border-radius: 10px;
+                            padding: 20px;
+                            margin: 25px 0;
+                            color: #155724;
+                            position: relative;
+                            overflow: hidden;
+                        }
+
+                        .success-notice::before {
+                            content: '✅';
+                            position: absolute;
+                            top: -5px;
+                            right: 10px;
+                            font-size: 40px;
+                            opacity: 0.2;
+                        }
+
+                        .success-notice strong {
+                            color: #0f5132;
+                            display: block;
+                            margin-bottom: 10px;
+                            font-size: 18px;
+                        }
+
+                        .security-tips {
+                            background: #e3f2fd;
+                            border-radius: 10px;
+                            padding: 20px;
+                            margin: 25px 0;
+                        }
+
+                        .security-tips h3 {
+                            color: #1976d2;
+                            margin-top: 0;
+                            margin-bottom: 15px;
+                            font-size: 18px;
+                        }
+
+                        .security-tips ul {
+                            margin: 0;
+                            padding-left: 20px;
+                        }
+
+                        .security-tips li {
+                            margin-bottom: 10px;
+                            color: #444;
+                        }
+
+                        .cta-container {
+                            text-align: center;
+                            margin: 30px 0;
+                        }
+
+                        .cta {
+                            display: inline-block;
+                            padding: 15px 30px;
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: #ffffff;
+                            text-decoration: none;
+                            border-radius: 8px;
+                            font-weight: 600;
+                            font-size: 16px;
+                            transition: transform 0.2s ease;
+                        }
+
+                        .cta:hover {
+                            transform: translateY(-2px);
+                        }
+                
+                        .footer {
+                            background-color: #f8f9fa;
+                            padding: 25px 30px;
+                            border-top: 1px solid #dee2e6;
+                            font-size: 14px;
+                            color: #6c757d;
+                            text-align: center;
+                        }
+
+                        .footer a {
+                            color: #667eea;
+                            text-decoration: none;
+                            font-weight: 500;
+                        }
+
+                        .footer a:hover {
+                            text-decoration: underline;
+                        }
+
+                        .copyright {
+                            margin-top: 20px;
+                            font-size: 12px;
+                            color: #999;
+                        }
+
+                        @media (max-width: 600px) {
+                            .container {
+                                margin: 0;
+                                border-radius: 0;
+                            }
+                            
+                            .content {
+                                padding: 30px 20px;
+                            }
+                            
+                            .header {
+                                padding: 25px 20px;
+                            }
+
+                            .logo {
+                                max-width: 150px;
+                            }
+
+                            .header h1 {
+                                font-size: 24px;
+                            }
+                        }
+                    </style>
+                </head>
+                
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <img src="cid:beeja-logo" alt="Beeja Innovative Ventures" class="logo">
+                            <h1>🎉 Password Reset Successful</h1>
+                        </div>
+                        
+                        <div class="content">
+                            <div class="greeting">Hello ${user.firstName || 'User'},</div>
+                            
+                            <div class="message">
+                                Great news! Your password has been successfully reset for your Beeja Learning Platform account.
+                            </div>
+
+                            <div class="success-notice">
+                                <strong>✅ Password Reset Complete</strong>
+                                Your account is now secured with your new password. You can log in immediately using your new credentials.
+                            </div>
+
+                            <div class="security-tips">
+                                <h3>🔐 Next Steps for Account Security</h3>
+                                <ul>
+                                    <li><strong>Log in now:</strong> Use your new password to access your account</li>
+                                    <li><strong>Review activity:</strong> Check your recent account activity for any suspicious behavior</li>
+                                    <li><strong>Update settings:</strong> Consider updating your security preferences</li>
+                                    <li><strong>Enable 2FA:</strong> Add two-factor authentication for extra security</li>
+                                    <li><strong>Stay vigilant:</strong> Monitor your account regularly for unauthorized access</li>
+                                </ul>
+                            </div>
+
+                            <div class="cta-container">
+                                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login" class="cta">
+                                    Log In to Your Account
+                                </a>
+                            </div>
+
+                            <div class="message">
+                                <strong>⚠️ Important:</strong> If you did not request this password reset, please contact our support team immediately at 
+                                <a href="mailto:info@beejaacademy.com" style="color: #667eea;">info@beejaacademy.com</a>
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            <p>This is an automated message from Beeja Learning Platform.</p>
+                            <p>If you have any questions or concerns, please contact our support team at:<br>
+                                <a href="mailto:info@beejaacademy.com">info@beejaacademy.com</a>
+                            </p>
+                            <div class="copyright">
+                                © 2024 Beeja Innovative Ventures. All rights reserved.
+                            </div>
+                        </div>
+                    </div>
+                </body>
+                </html>
                 `
             );
         } catch (emailError) {

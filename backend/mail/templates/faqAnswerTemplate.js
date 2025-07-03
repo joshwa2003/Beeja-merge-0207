@@ -69,7 +69,7 @@ const faqAnswerTemplate = (userName, question, answer) => {
     </head>
     <body>
         <div class="container">
-            <img class="logo" src="cid:beeja-logo" alt="Beeja Logo" style="max-width: 200px; margin-bottom: 20px;">
+            <img class="logo" src="cid:beeja-logo" alt="Beeja Innovative Ventures" style="max-width: 200px; margin-bottom: 20px;">
             <h2>Your FAQ Question Has Been Answered!</h2>
             
             <div class="message">

@@ -67,8 +67,8 @@ exports.courseEnrollmentEmail = (courseName, name) => {
     
     <body>
         <div class="container">
-            <a href=""><img class="logo" src="cid:Beeja innovative ventures"
-                    alt="Beeja Logo"></a>
+            <a href=""><img class="logo" src="cid:beeja-logo"
+                    alt="Beeja Innovative Ventures"></a>
             <div class="message">Course Registration Confirmation</div>
             <div class="body">
                 <p>Dear ${name},</p>

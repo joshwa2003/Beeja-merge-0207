@@ -159,7 +159,7 @@ exports.resetPasswordTemplate = (email, resetLink, userName = 'User') => {
     <body>
         <div class="container">
             <div class="header">
-                <img src="cid:beeja-logo" alt="Beeja Logo" style="max-width: 150px; margin-bottom: 15px;">
+                <img src="cid:beeja-logo" alt="Beeja Innovative Ventures" style="max-width: 150px; margin-bottom: 15px;">
                 <h1>🔐 Password Reset Request</h1>
             </div>
             
