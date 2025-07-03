@@ -8,6 +8,7 @@ import { IoIosArrowBack } from "react-icons/io"
 import { FiClock, FiCheckCircle, FiAlertCircle, FiAward } from "react-icons/fi"
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi"
 import Xarrow from 'react-xarrows'
+import { toast } from "react-hot-toast"
 
 const QuizView = () => {
   const { courseId, sectionId, subSectionId } = useParams()
@@ -27,6 +28,13 @@ const QuizView = () => {
   const [retakeKey, setRetakeKey] = useState(0)
   const [selectedQuestion, setSelectedQuestion] = useState(null)
   const [shuffledAnswers, setShuffledAnswers] = useState({})
+  const [notificationsShown, setNotificationsShown] = useState({
+    twenty: false,
+    ten: false,
+    five: false,
+    one: false
+  })
+  const [initialTimeLimit, setInitialTimeLimit] = useState(null)
 
   // Load quiz data and status
   useEffect(() => {
@@ -49,7 +57,9 @@ const QuizView = () => {
           ])
           setQuizData(quiz)
           setQuizStatus(status)
-          setTimeRemaining(quiz.timeLimit || 10 * 60) // Fallback to 10 minutes if timeLimit is not set
+          const timeLimit = quiz.timeLimit || 10 * 60
+          setTimeRemaining(timeLimit)
+          setInitialTimeLimit(timeLimit) // Store initial time limit
         } catch (error) {
           console.error("Error loading quiz:", error)
         } finally {
@@ -63,9 +73,45 @@ const QuizView = () => {
 
   // Timer effect
   useEffect(() => {
-    if (quizStarted && timeRemaining > 0) {
+    if (quizStarted && timeRemaining > 0 && initialTimeLimit) {
       const timer = setInterval(() => {
         setTimeRemaining(prev => {
+          // Smart notification logic - skip if initial time limit matches notification threshold
+          const shouldSkip20Min = initialTimeLimit === 1200 // Skip if quiz is exactly 20 minutes
+          const shouldSkip10Min = initialTimeLimit === 600  // Skip if quiz is exactly 10 minutes
+          const shouldSkip5Min = initialTimeLimit === 300   // Skip if quiz is exactly 5 minutes
+          const shouldSkip1Min = initialTimeLimit === 60    // Skip if quiz is exactly 1 minute
+
+          // Check for notification thresholds with smart skipping logic
+          if (prev === 1200 && !notificationsShown.twenty && !shouldSkip20Min) { // 20 minutes
+            toast.success("20 minutes remaining!", {
+              icon: "⏰",
+              duration: 4000
+            })
+            setNotificationsShown(prev => ({ ...prev, twenty: true }))
+          }
+          else if (prev === 600 && !notificationsShown.ten && !shouldSkip10Min) { // 10 minutes
+            toast.success("10 minutes remaining!", {
+              icon: "⚠️",
+              duration: 4000
+            })
+            setNotificationsShown(prev => ({ ...prev, ten: true }))
+          }
+          else if (prev === 300 && !notificationsShown.five && !shouldSkip5Min) { // 5 minutes
+            toast.success("5 minutes remaining!", {
+              icon: "⚠️",
+              duration: 4000
+            })
+            setNotificationsShown(prev => ({ ...prev, five: true }))
+          }
+          else if (prev === 60 && !notificationsShown.one && !shouldSkip1Min) { // 1 minute
+            toast.success("1 minute remaining!", {
+              icon: "🚨",
+              duration: 4000
+            })
+            setNotificationsShown(prev => ({ ...prev, one: true }))
+          }
+
           if (prev <= 1) {
             handleTimerExpiry()
             return 0
@@ -76,7 +122,7 @@ const QuizView = () => {
 
       return () => clearInterval(timer)
     }
-  }, [quizStarted, timeRemaining])
+  }, [quizStarted, timeRemaining, notificationsShown, initialTimeLimit])
 
   // Function to check if shuffled array is in different order than original
   const isShuffledDifferent = (original, shuffled) => {
@@ -121,6 +167,14 @@ const QuizView = () => {
       setLoading(true)
       console.log("Retake Quiz button clicked")
       
+      // Reset notifications state for retake
+      setNotificationsShown({
+        twenty: false,
+        ten: false,
+        five: false,
+        one: false
+      })
+      
       // Check if quiz is already passed
       if (quizStatus && quizStatus.passed) {
         alert("Quiz already passed. Retakes are not allowed for passed quizzes.")
@@ -149,7 +203,9 @@ const QuizView = () => {
       setRetakeKey(prev => prev + 1)
       
       // Reset timer with fallback
-      setTimeRemaining(quiz.timeLimit || 10 * 60) // Fallback to 10 minutes if timeLimit is not set
+      const timeLimit = quiz.timeLimit || 10 * 60
+      setTimeRemaining(timeLimit)
+      setInitialTimeLimit(timeLimit) // Update initial time limit for retake
       
       // Re-shuffle answers for match the following questions
       if (quiz.questions) {
@@ -596,6 +652,17 @@ const QuizView = () => {
             ) : (
               <IconBtn
                 onClick={() => {
+                  // Reset notifications when starting quiz
+                  setNotificationsShown({
+                    twenty: false,
+                    ten: false,
+                    five: false,
+                    one: false
+                  })
+                  // Set initial time limit if not already set
+                  if (!initialTimeLimit && timeRemaining) {
+                    setInitialTimeLimit(timeRemaining)
+                  }
                   setQuizStarted(true)
                 }}
                 text={quizStatus && quizStatus.attempts > 0 ? "Retake Quiz" : "Start Quiz"}
