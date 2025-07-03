@@ -32,6 +32,8 @@ const featuredCoursesRoutes = require('./routes/featuredCourses');
 const faqRoutes = require('./routes/faq.js');
 const userAnalyticsRoutes = require('./routes/userAnalytics');
 const chatRoutes = require('./routes/chat');
+const jobRoutes = require('./routes/jobs');
+const jobApplicationRoutes = require('./routes/jobApplications');
 
 // middleware 
 app.use(cookieParser());
@@ -236,6 +238,10 @@ app.use('/api/v1/faqs', faqRoutes);
 app.use('/api/v1/user', userAnalyticsRoutes);
 // Chat Routes
 app.use('/api/v1/chat', chatRoutes);
+// Job Routes
+app.use('/api/v1/jobs', jobRoutes);
+// Job Application Routes
+app.use('/api/v1/job-applications', jobApplicationRoutes);
 
 // Default Route
 app.get('/', (req, res) => {
