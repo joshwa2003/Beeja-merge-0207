@@ -2,6 +2,7 @@ const Certificate = require("../models/certificate");
 const Course = require("../models/course");
 const User = require("../models/user");
 const CourseProgress = require("../models/courseProgress");
+const { regenerateCertificatesForCourse } = require("../utils/certificateRegeneration");
 
 // ================ Generate Certificate ================
 exports.generateCertificate = async (req, res) => {
@@ -174,8 +175,18 @@ exports.generateCertificate = async (req, res) => {
         courseName: course.courseName,
         studentName: `${user.firstName} ${user.lastName}`,
         email: user.email,
-        completionDate: new Date()
+        completionDate: new Date(),
+        issuedDate: new Date()
       });
+    } else {
+      // Certificate already exists - update the issue date to current date
+      // This handles the case where new content was added to the course
+      // and the student completed it again
+      certificate.issuedDate = new Date();
+      certificate.completionDate = new Date();
+      await certificate.save();
+      
+      console.log(`Certificate updated for student: ${user.firstName} ${user.lastName}, Course: ${course.courseName}, New Issue Date: ${certificate.issuedDate}`);
     }
 
     return res.status(200).json({
@@ -244,6 +255,149 @@ exports.getUserCertificates = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error"
+    });
+  }
+};
+
+// ================ Regenerate Certificates for Course (Admin Only) ================
+exports.regenerateCertificatesForCourse = async (req, res) => {
+  try {
+    const { courseId } = req.body;
+
+    if (!courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Course ID is required"
+      });
+    }
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Regenerate certificates for this course
+    const result = await regenerateCertificatesForCourse(courseId, 'manual');
+
+    return res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        courseId: result.courseId,
+        courseName: result.courseName,
+        regeneratedCount: result.regeneratedCount,
+        invalidatedCount: result.invalidatedCount,
+        results: result.results
+      }
+    });
+
+  } catch (error) {
+    console.error("Error regenerating certificates:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error regenerating certificates",
+      error: error.message
+    });
+  }
+};
+
+// ================ Get Certificate Regeneration Status ================
+exports.getCertificateRegenerationStatus = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+
+    if (!courseId) {
+      return res.status(400).json({
+        success: false,
+        message: "Course ID is required"
+      });
+    }
+
+    // Check if course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found"
+      });
+    }
+
+    // Find all certificates for this course
+    const certificates = await Certificate.find({ courseId })
+      .populate('userId', 'firstName lastName email')
+      .select('certificateId userId issuedDate completionDate createdAt updatedAt');
+
+    // Get course content to calculate total items
+    const courseWithContent = await Course.findById(courseId).populate({
+      path: "courseContent",
+      populate: {
+        path: "subSection",
+        populate: {
+          path: "quiz"
+        }
+      }
+    });
+
+    let totalCourseItems = 0;
+    courseWithContent.courseContent?.forEach((section) => {
+      section.subSection?.forEach((subsection) => {
+        totalCourseItems += 1; // video
+        if (subsection.quiz) {
+          totalCourseItems += 1; // quiz
+        }
+      });
+    });
+
+    // Check current completion status for each certificate holder
+    const certificateStatuses = [];
+    for (const certificate of certificates) {
+      const courseProgress = await CourseProgress.findOne({
+        courseID: courseId,
+        userId: certificate.userId._id,
+      });
+
+      let currentProgress = 0;
+      let completedItems = 0;
+      
+      if (courseProgress) {
+        completedItems = courseProgress.completedVideos.length + courseProgress.completedQuizzes.length;
+        currentProgress = totalCourseItems > 0 ? (completedItems / totalCourseItems) * 100 : 0;
+      }
+
+      certificateStatuses.push({
+        certificateId: certificate.certificateId,
+        studentName: `${certificate.userId.firstName} ${certificate.userId.lastName}`,
+        studentEmail: certificate.userId.email,
+        issuedDate: certificate.issuedDate,
+        completionDate: certificate.completionDate,
+        currentProgress: Math.round(currentProgress * 100) / 100,
+        isCurrentlyValid: currentProgress >= 100,
+        needsRegeneration: currentProgress >= 100 && certificate.updatedAt < certificate.createdAt
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Certificate status fetched successfully",
+      data: {
+        courseId,
+        courseName: course.courseName,
+        totalCertificates: certificates.length,
+        totalCourseItems,
+        certificates: certificateStatuses
+      }
+    });
+
+  } catch (error) {
+    console.error("Error fetching certificate regeneration status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching certificate status",
+      error: error.message
     });
   }
 };

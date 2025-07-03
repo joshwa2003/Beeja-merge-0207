@@ -22,8 +22,8 @@ const AdminSidebar = ({ activeTab, onTabChange }) => {
   // Sidebar navigation items
   const sidebarItems = [
     { id: 'users', label: 'Users', icon: <FaUsers size={16} /> },
-    { id: 'courses', label: 'Courses', icon: <FaBookOpen size={16} /> },
     { id: 'categories', label: 'Course Categories', icon: <VscSymbolClass size={16} /> },
+    { id: 'courses', label: 'Courses', icon: <FaBookOpen size={16} /> },
     { id: 'courseTypes', label: 'Course Types', icon: <FaGraduationCap size={16} /> },
     { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle size={16} /> },
     { id: 'studentProgress', label: 'Student Progress', icon: <FaChartLine size={16} /> },

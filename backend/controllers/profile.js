@@ -325,64 +325,62 @@ exports.getEnrolledCourses = async (req, res) => {
                 status: true
             })
 
-            // Since we're iterating through user's enrolled courses, they should always have access
-            // This ensures students who enrolled when course was free retain access even if course becomes paid later
-            // We still check for active orders for potential future use cases
-            if (true) { // Always allow access to enrolled courses
-                let totalDurationInSeconds = 0
-                let SubsectionLength = 0
-                
-                for (var j = 0; j < course.courseContent.length; j++) {
-                    totalDurationInSeconds += course.courseContent[j].subSection.reduce((acc, curr) => acc + parseInt(curr.timeDuration), 0)
-                    course.totalDuration = convertSecondsToDuration(totalDurationInSeconds)
-                    SubsectionLength += course.courseContent[j].subSection.length
-                }
+            // Mark course as inactive if no active order and not free
+            course.isActive = isFree || (activeOrder !== null);
 
-                let courseProgress = await CourseProgress.findOne({
-                    courseID: course._id,
-                    userId: userId,
-                })
+            let totalDurationInSeconds = 0
+            let SubsectionLength = 0
+            
+            for (var j = 0; j < course.courseContent.length; j++) {
+                totalDurationInSeconds += course.courseContent[j].subSection.reduce((acc, curr) => acc + parseInt(curr.timeDuration), 0)
+                course.totalDuration = convertSecondsToDuration(totalDurationInSeconds)
+                SubsectionLength += course.courseContent[j].subSection.length
+            }
 
-                if (!courseProgress) {
-                    course.progressPercentage = 0
-                } else {
-                    // Calculate progress using the same logic as certificate generation
-                    let totalItems = 0
-                    let completedItems = 0
+            let courseProgress = await CourseProgress.findOne({
+                courseID: course._id,
+                userId: userId,
+            })
 
-                    // Count videos and quizzes for each subsection
-                    for (let j = 0; j < course.courseContent.length; j++) {
-                        for (let k = 0; k < course.courseContent[j].subSection.length; k++) {
-                            const subsection = course.courseContent[j].subSection[k]
-                            
-                            // Count video
+            if (!courseProgress) {
+                course.progressPercentage = 0
+            } else {
+                // Calculate progress using the same logic as certificate generation
+                let totalItems = 0
+                let completedItems = 0
+
+                // Count videos and quizzes for each subsection
+                for (let j = 0; j < course.courseContent.length; j++) {
+                    for (let k = 0; k < course.courseContent[j].subSection.length; k++) {
+                        const subsection = course.courseContent[j].subSection[k]
+                        
+                        // Count video
+                        totalItems += 1
+                        if (courseProgress.completedVideos.includes(subsection._id)) {
+                            completedItems += 1
+                        }
+
+                        // Count quiz if exists
+                        if (subsection.quiz) {
                             totalItems += 1
-                            if (courseProgress.completedVideos.includes(subsection._id)) {
+                            if (courseProgress.completedQuizzes && courseProgress.completedQuizzes.includes(subsection._id)) {
                                 completedItems += 1
-                            }
-
-                            // Count quiz if exists
-                            if (subsection.quiz) {
-                                totalItems += 1
-                                if (courseProgress.completedQuizzes && courseProgress.completedQuizzes.includes(subsection._id)) {
-                                    completedItems += 1
-                                }
                             }
                         }
                     }
-
-                    if (totalItems === 0) {
-                        course.progressPercentage = 100
-                    } else {
-                        // To make it up to 2 decimal point
-                        const multiplier = Math.pow(10, 2)
-                        course.progressPercentage =
-                            Math.round((completedItems / totalItems) * 100 * multiplier) / multiplier
-                    }
                 }
-                
-                activeCourses.push(course)
+
+                if (totalItems === 0) {
+                    course.progressPercentage = 100
+                } else {
+                    // To make it up to 2 decimal point
+                    const multiplier = Math.pow(10, 2)
+                    course.progressPercentage =
+                        Math.round((completedItems / totalItems) * 100 * multiplier) / multiplier
+                }
             }
+            
+            activeCourses.push(course)
         }
 
         if (!userDetails) {
