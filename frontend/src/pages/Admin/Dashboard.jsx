@@ -1,30 +1,41 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaUsers, FaBookOpen, FaChartBar, FaGraduationCap, FaQuestionCircle, FaChartLine, FaTag } from 'react-icons/fa';
 import { MdSettings } from 'react-icons/md';
 import { VscPackage } from 'react-icons/vsc';
 
-import StudentProgress from './components/StudentProgress/StudentProgress';
-
 import AdminSidebar from '../../components/core/Dashboard/Admin/AdminSidebar';
-import UserManagement from './components/UserManagement';
-import CourseManagement from './components/CourseManagement';
-import CreateCourse from './components/CreateCourse/CreateCourse';
-import EnhancedAnalytics from './components/EnhancedAnalytics';
-import Settings from './components/Settings';
-import CourseTypeManager from '../../components/core/Dashboard/Admin/CourseTypeManager';
-import CourseAccessRequests from '../../components/core/Dashboard/Admin/CourseAccessRequests';
-import QuizManagement from './components/QuizManagement';
-import CourseCategories from '../../components/core/Dashboard/AddCategory/CourseCategories';
-import BundleAccessRequests from './components/BundleAccessRequests';
-import Coupons from './Coupons';
-import Orders from './components/Orders';
-import NotificationManagement from './components/NotificationManagement';
-import FeaturedCoursesManagement from './components/FeaturedCoursesManagement';
-import ContactMessages from '../../components/core/Dashboard/Admin/ContactMessages';
-import FaqManagement from './components/FaqManagement';
-import AdminChats from '../Dashboard/AdminChats';
+
+// Lazy load components to improve initial load performance
+const StudentProgress = lazy(() => import('./components/StudentProgress/StudentProgress'));
+const UserManagement = lazy(() => import('./components/UserManagement'));
+const CourseManagement = lazy(() => import('./components/CourseManagement'));
+const CreateCourse = lazy(() => import('./components/CreateCourse/CreateCourse'));
+const EnhancedAnalytics = lazy(() => import('./components/EnhancedAnalytics'));
+const Settings = lazy(() => import('./components/Settings'));
+const CourseTypeManager = lazy(() => import('../../components/core/Dashboard/Admin/CourseTypeManager'));
+const CourseAccessRequests = lazy(() => import('../../components/core/Dashboard/Admin/CourseAccessRequests'));
+const QuizManagement = lazy(() => import('./components/QuizManagement'));
+const CourseCategories = lazy(() => import('../../components/core/Dashboard/AddCategory/CourseCategories'));
+const BundleAccessRequests = lazy(() => import('./components/BundleAccessRequests'));
+const Coupons = lazy(() => import('./Coupons'));
+const Orders = lazy(() => import('./components/Orders'));
+const NotificationManagement = lazy(() => import('./components/NotificationManagement'));
+const FeaturedCoursesManagement = lazy(() => import('./components/FeaturedCoursesManagement'));
+const ContactMessages = lazy(() => import('../../components/core/Dashboard/Admin/ContactMessages'));
+const FaqManagement = lazy(() => import('./components/FaqManagement'));
+const AdminChats = lazy(() => import('../Dashboard/AdminChats'));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="relative">
+      <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+      <div className="absolute inset-0 w-12 h-12 border-4 border-transparent border-t-blue-500 rounded-full animate-spin" style={{ animationDelay: '0.15s' }}></div>
+    </div>
+  </div>
+);
 
 const AdminDashboard = () => {
   const { user } = useSelector((state) => state.profile);
@@ -32,11 +43,12 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics');
   const [showCreateCourse, setShowCreateCourse] = useState(false);
 
-  // Sidebar navigation items for title display
+  // Sidebar navigation items for title display (removed duplicates)
   const sidebarItems = [
-    { id: 'users', label: 'Users', icon: <FaUsers className="w-5 h-5" /> },
+    { id: 'analytics', label: 'Analytics Dashboard', icon: <FaChartBar className="w-5 h-5" /> },
+    { id: 'users', label: 'User Management', icon: <FaUsers className="w-5 h-5" /> },
+    { id: 'courses', label: 'Course Management', icon: <FaBookOpen className="w-5 h-5" /> },
     { id: 'categories', label: 'Course Categories', icon: <FaGraduationCap className="w-5 h-5" /> },
-    { id: 'courses', label: 'Courses', icon: <FaBookOpen className="w-5 h-5" /> },
     { id: 'courseTypes', label: 'Course Types', icon: <FaGraduationCap className="w-5 h-5" /> },
     { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle className="w-5 h-5" /> },
     { id: 'studentProgress', label: 'Student Progress', icon: <FaChartLine className="w-5 h-5" /> },
@@ -44,21 +56,12 @@ const AdminDashboard = () => {
     { id: 'bundleRequests', label: 'Bundle Requests', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'orders', label: 'Orders', icon: <VscPackage className="w-5 h-5" /> },
     { id: 'coupons', label: 'Coupons', icon: <FaTag className="w-5 h-5" /> },
+    { id: 'notifications', label: 'Notification Management', icon: <FaUsers className="w-5 h-5" /> },
+    { id: 'contactMessages', label: 'Contact Messages', icon: <FaUsers className="w-5 h-5" /> },
+    { id: 'featuredCourses', label: 'Featured Courses Management', icon: <FaUsers className="w-5 h-5" /> },
+    { id: 'faqs', label: 'FAQ Management', icon: <FaQuestionCircle className="w-5 h-5" /> },
     { id: 'chats', label: 'Manage Chats', icon: <FaUsers className="w-5 h-5" /> },
-    { id: 'analytics', label: 'Analytics', icon: <FaChartBar className="w-5 h-5" /> },
     { id: 'settings', label: 'Settings', icon: <MdSettings className="w-5 h-5" /> },
-    { id: 'users', label: 'User Management' },
-    { id: 'courses', label: 'Course Management' },
-    { id: 'courseTypes', label: 'Course Types' },
-    { id: 'quizzes', label: 'Quiz Management' },
-    { id: 'accessRequests', label: 'Access Requests' },
-    { id: 'notifications', label: 'Notification Management' },
-    { id: 'contactMessages', label: 'Contact Messages' },
-    { id: 'featuredCourses', label: 'Featured Courses Management' },
-    { id: 'faqs', label: 'FAQ Management' },
-    { id: 'chats', label: 'Manage Chats' },
-    { id: 'analytics', label: 'Analytics Dashboard' },
-    { id: 'settings', label: 'Settings' },
   ];
 
   const handleTabChange = (tabId) => {
@@ -96,29 +99,31 @@ const AdminDashboard = () => {
 
             {/* Content */}
             <div className="bg-richblack-800 border border-richblack-700 rounded-xl p-4 sm:p-6 shadow-md">
-              {showCreateCourse ? (
-                <CreateCourse onCancel={() => setShowCreateCourse(false)} />
-              ) : (
-                <>
-                  {activeTab === 'users' && <UserManagement />}
-                  {activeTab === 'courses' && <CourseManagement onCreateCourse={handleCreateCourse} />}
-                  {activeTab === 'categories' && <CourseCategories />}
-                  {activeTab === 'courseTypes' && <CourseTypeManager />}
-                  {activeTab === 'accessRequests' && <CourseAccessRequests />}
-                  {activeTab === 'analytics' && <EnhancedAnalytics />}
-                  {activeTab === 'settings' && <Settings />}
-                  {activeTab === 'quizzes' && <QuizManagement />}
-                  {activeTab === 'bundleRequests' && <BundleAccessRequests />}
-                  {activeTab === 'studentProgress' && <StudentProgress />}
-                  {activeTab === 'orders' && <Orders />}
-                  {activeTab === 'coupons' && <Coupons />}
-                  {activeTab === 'notifications' && <NotificationManagement />}
-                  {activeTab === 'contactMessages' && <ContactMessages />}
-                  {activeTab === 'featuredCourses' && <FeaturedCoursesManagement />}
-                  {activeTab === 'faqs' && <FaqManagement />}
-                  {activeTab === 'chats' && <AdminChats />}
-                </>
-              )}
+              <Suspense fallback={<LoadingSpinner />}>
+                {showCreateCourse ? (
+                  <CreateCourse onCancel={() => setShowCreateCourse(false)} />
+                ) : (
+                  <>
+                    {activeTab === 'analytics' && <EnhancedAnalytics />}
+                    {activeTab === 'users' && <UserManagement />}
+                    {activeTab === 'courses' && <CourseManagement onCreateCourse={handleCreateCourse} />}
+                    {activeTab === 'categories' && <CourseCategories />}
+                    {activeTab === 'courseTypes' && <CourseTypeManager />}
+                    {activeTab === 'accessRequests' && <CourseAccessRequests />}
+                    {activeTab === 'settings' && <Settings />}
+                    {activeTab === 'quizzes' && <QuizManagement />}
+                    {activeTab === 'bundleRequests' && <BundleAccessRequests />}
+                    {activeTab === 'studentProgress' && <StudentProgress />}
+                    {activeTab === 'orders' && <Orders />}
+                    {activeTab === 'coupons' && <Coupons />}
+                    {activeTab === 'notifications' && <NotificationManagement />}
+                    {activeTab === 'contactMessages' && <ContactMessages />}
+                    {activeTab === 'featuredCourses' && <FeaturedCoursesManagement />}
+                    {activeTab === 'faqs' && <FaqManagement />}
+                    {activeTab === 'chats' && <AdminChats />}
+                  </>
+                )}
+              </Suspense>
             </div>
           </div>
         </div>
