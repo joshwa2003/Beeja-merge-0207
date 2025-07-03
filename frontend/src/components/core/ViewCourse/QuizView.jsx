@@ -380,6 +380,16 @@ const QuizView = () => {
     }
   }
 
+  // Check if this is the last lecture/quiz in the course
+  const isLastItem = () => {
+    const currentSectionIndx = courseSectionData.findIndex(data => data._id === sectionId)
+    const noOfSubsections = courseSectionData[currentSectionIndx].subSection.length
+    const currentSubSectionIndx = courseSectionData[currentSectionIndx].subSection.findIndex(data => data._id === subSectionId)
+    
+    // Check if it's the last subsection of the last section
+    return currentSectionIndx === courseSectionData.length - 1 && currentSubSectionIndx === noOfSubsections - 1
+  }
+
   // Compute result data
   const resultData = quizResult || (quizStatus?.lastAttempt && !quizStarted ? quizStatus.lastAttempt : null)
   const percentage = resultData ? parseFloat(resultData.percentage || 0) : 0
@@ -488,7 +498,7 @@ const QuizView = () => {
             )}
             <IconBtn
               onClick={goToNextLecture}
-              text="Next Lecture"
+              text={isLastItem() ? "Go to Course" : "Next Lecture"}
               customClasses="px-6 py-3"
             />
           </div>

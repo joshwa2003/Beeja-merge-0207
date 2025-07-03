@@ -84,10 +84,12 @@ const VideoDetails = () => {
       const nextSubSectionId = courseSectionData[currentSectionIndx].subSection[currentSubSectionIndx + 1]._id
 
       navigate(`/view-course/${courseId}/section/${sectionId}/sub-section/${nextSubSectionId}`)
-    } else {
+    } else if (currentSectionIndx < courseSectionData.length - 1) {
       const nextSectionId = courseSectionData[currentSectionIndx + 1]._id
       const nextSubSectionId = courseSectionData[currentSectionIndx + 1].subSection[0]._id
       navigate(`/view-course/${courseId}/section/${nextSectionId}/sub-section/${nextSubSectionId}`)
+    } else {
+      navigate(`/dashboard/enrolled-courses`)
     }
   }
 
@@ -241,15 +243,13 @@ const VideoDetails = () => {
                     Prev
                   </button>
                 )}
-                {!isLastVideo() && (
-                  <button
-                    disabled={loading}
-                    onClick={goToNextVideo}
-                    className="blackButton"
-                  >
-                    Next
-                  </button>
-                )}
+                <button
+                  disabled={loading}
+                  onClick={goToNextVideo}
+                  className="blackButton"
+                >
+                  {isLastVideo() ? "Go to Course" : "Next"}
+                </button>
               </div>
             </div>
           )}
