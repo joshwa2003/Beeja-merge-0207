@@ -27,18 +27,34 @@ export default function QuizCreator({ subSectionId, existingQuiz, onClose, onSuc
   useEffect(() => {
     if (existingQuiz) {
       if (existingQuiz.questions) {
-        setQuestions(existingQuiz.questions.map(q => {
-          const baseQuestion = {
+        const processedQuestions = existingQuiz.questions.map(q => {
+          let baseQuestion = {
             questionText: q.questionText || "",
             questionType: q.questionType || "multipleChoice",
-            options: q.options || ["", "", "", ""],
-            answers: q.answers || ["", "", "", ""], // For match the following
+            options: [],
+            answers: [], // For match the following
             correctAnswers: q.correctAnswers || [],
             correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : null,
             keywords: q.keywords || [], // For short answer questions
             marks: q.marks || 5,
             required: q.required !== undefined ? q.required : true
           };
+
+          // Special handling for match the following questions
+          if (q.questionType === "matchTheFollowing") {
+            // Ensure both options and answers arrays exist and have proper length
+            const maxLength = Math.max(
+              (q.options || []).length,
+              (q.answers || []).length,
+              4 // minimum length
+            );
+            baseQuestion.options = Array(maxLength).fill("").map((_, i) => q.options?.[i] || "");
+            baseQuestion.answers = Array(maxLength).fill("").map((_, i) => q.answers?.[i] || "");
+          } else {
+            // For other question types
+            baseQuestion.options = q.options || ["", "", "", ""];
+            baseQuestion.answers = q.answers || [];
+          }
 
           // Add code solving specific fields if it's a code solving question
           if (q.questionType === "codeSolve") {
@@ -52,7 +68,9 @@ export default function QuizCreator({ subSectionId, existingQuiz, onClose, onSuc
           }
 
           return baseQuestion;
-        }))
+        });
+        
+        setQuestions(processedQuestions);
       }
       if (existingQuiz.timeLimit) {
         setTimeLimit(Math.floor(existingQuiz.timeLimit / 60)); // Convert seconds to minutes
@@ -365,6 +383,12 @@ export default function QuizCreator({ subSectionId, existingQuiz, onClose, onSuc
                     newQuestion.answers = Array(3).fill('');
                   }
                   
+                  // Preserve existing data when changing back to matchTheFollowing
+                  if (newType === 'matchTheFollowing' && questions[qIndex].questionType === 'matchTheFollowing') {
+                    newQuestion.options = questions[qIndex].options || Array(3).fill('');
+                    newQuestion.answers = questions[qIndex].answers || Array(3).fill('');
+                  }
+                  
                   const newQuestions = [...questions];
                   newQuestions[qIndex] = newQuestion;
                   setQuestions(newQuestions);
@@ -563,12 +587,18 @@ export default function QuizCreator({ subSectionId, existingQuiz, onClose, onSuc
                               type="text"
                               value={question.answers?.[oIndex] || ''}
                               onChange={(e) => {
-                                const newQuestions = [...questions]
+                                const newQuestions = [...questions];
+                                // Initialize answers array if it doesn't exist
                                 if (!newQuestions[qIndex].answers) {
-                                  newQuestions[qIndex].answers = []
+                                  newQuestions[qIndex].answers = Array(newQuestions[qIndex].options.length).fill('');
                                 }
-                                newQuestions[qIndex].answers[oIndex] = e.target.value
-                                setQuestions(newQuestions)
+                                // Ensure answers array is at least as long as options array
+                                while (newQuestions[qIndex].answers.length < newQuestions[qIndex].options.length) {
+                                  newQuestions[qIndex].answers.push('');
+                                }
+                                // Update the answer at the specific index
+                                newQuestions[qIndex].answers[oIndex] = e.target.value;
+                                setQuestions(newQuestions);
                               }}
                               placeholder={`Answer ${oIndex + 1}`}
                               className="w-full bg-richblack-700 text-richblack-5 rounded-lg p-3 border border-richblack-600 focus:border-yellow-50 transition-colors"

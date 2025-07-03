@@ -247,6 +247,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
           register={register}
           errors={errors}
           setValue={setValue}
+          initialData={course?.tag || []}
         />
 
         {/* Course Thumbnail Image */}
@@ -284,6 +285,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
           register={register}
           setValue={setValue}
           errors={errors}
+          initialData={course?.instructions || []}
         />
 
         {/* Select Instructor */}

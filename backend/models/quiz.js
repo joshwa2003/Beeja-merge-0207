@@ -30,6 +30,11 @@ const questionSchema = new mongoose.Schema({
             type: String
         }
     ],
+    answers: [
+        {
+            type: String // Array of answers for match the following questions
+        }
+    ],
     correctAnswers: [
         {
             type: Number // Array of indices for multiple choice questions
