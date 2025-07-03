@@ -107,7 +107,7 @@ export default function AdminCourseBuilder({ course, onCourseUpdate }) {
         setCourseData(updatedCourse)
         setEditSectionName(null)
         setValue("sectionName", "")
-        toast.success("Section name updated (unsaved)")
+        // Remove toast - section name change is visible in UI
       } else {
         // Create new section locally
         const newSection = {
@@ -122,7 +122,7 @@ export default function AdminCourseBuilder({ course, onCourseUpdate }) {
         }
         setCourseData(updatedCourse)
         setValue("sectionName", "")
-        toast.success("Section added (unsaved)")
+        // Remove toast - section addition is visible in UI
       }
     } catch (error) {
       console.error("Error with section operation:", error)
@@ -156,7 +156,7 @@ export default function AdminCourseBuilder({ course, onCourseUpdate }) {
       )
       const updatedCourse = { ...courseData, courseContent: updatedCourseContent }
       setCourseData(updatedCourse)
-      toast.success("Section removed (unsaved)")
+      // Remove toast - section removal is visible in UI
     } catch (error) {
       console.error("Error deleting section:", error)
       toast.error("Failed to remove section")
@@ -177,7 +177,7 @@ export default function AdminCourseBuilder({ course, onCourseUpdate }) {
       )
       const updatedCourse = { ...courseData, courseContent: updatedCourseContent }
       setCourseData(updatedCourse)
-      toast.success("Lecture removed (unsaved)")
+      // Remove toast - lecture removal is visible in UI
     } catch (error) {
       console.error("Error deleting subsection:", error)
       toast.error("Failed to remove lecture")
@@ -217,11 +217,7 @@ export default function AdminCourseBuilder({ course, onCourseUpdate }) {
     setCourseData(updatedCourse)
     setHasUnsavedChanges(true) // Explicitly set unsaved changes
     
-    if (isNew) {
-      toast.success("Lecture added (unsaved)")
-    } else {
-      toast.success("Lecture updated (unsaved)")
-    }
+    // Remove toasts - lecture changes are visible in UI with "(Unsaved)" indicators
   }
 
   // Save all changes to database
@@ -368,7 +364,7 @@ export default function AdminCourseBuilder({ course, onCourseUpdate }) {
       btn1Handler: () => {
         setCourseData(JSON.parse(JSON.stringify(originalCourseData)))
         setHasUnsavedChanges(false)
-        toast.success("Changes discarded")
+        // Remove toast - changes being discarded is obvious from UI reset
         setConfirmationModal(null)
       },
       btn2Handler: () => setConfirmationModal(null),

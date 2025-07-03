@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { Outlet, useParams, useNavigate } from "react-router-dom"
 import { toast } from "react-hot-toast"
@@ -17,103 +17,149 @@ import {
 
 import { setCourseViewSidebar } from "../slices/sidebarSlice"
 
-
-
-
 export default function ViewCourse() {
   const { courseId } = useParams()
   const { token } = useSelector((state) => state.auth)
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [reviewModal, setReviewModal] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // get Full Details Of Course
-  useEffect(() => {
-    ; (async () => {
-      try {
-        const courseData = await getFullDetailsOfCourse(courseId, token)
+  // Memoized function to calculate total lectures
+  const calculateTotalLectures = useCallback((courseContent) => {
+    return courseContent?.reduce((total, section) => total + section.subSection.length, 0) || 0
+  }, [])
+
+  // Memoized function to reset course state
+  const resetCourseState = useCallback(() => {
+    dispatch(setCourseSectionData([]))
+    dispatch(setEntireCourseData({}))
+    dispatch(setCompletedLectures([]))
+    dispatch(setCompletedQuizzes([]))
+    dispatch(setPassedQuizzes([]))
+    dispatch(setTotalNoOfLectures(0))
+  }, [dispatch])
+
+  // Get current course data from Redux store
+  const currentCourseData = useSelector(state => state.viewCourse.courseEntireData)
+
+  // Memoized course data fetching
+  const fetchCourseDetails = useCallback(async () => {
+    if (!courseId || !token) return
+    
+    // Prevent duplicate fetches if we already have the data
+    if (currentCourseData?._id === courseId) return
+    
+    setLoading(true)
+    try {
+      const courseData = await getFullDetailsOfCourse(courseId, token)
+      
+      if (courseData?.courseDetails) {
+        const totalLectures = calculateTotalLectures(courseData.courseDetails.courseContent)
         
-        // Check if courseData and courseDetails exist
-        if (courseData && courseData.courseDetails) {
-          // console.log("Course Data here... ", courseData.courseDetails)
+        // Batch dispatch to reduce re-renders
+        dispatch((dispatch) => {
           dispatch(setCourseSectionData(courseData.courseDetails.courseContent))
           dispatch(setEntireCourseData(courseData.courseDetails))
           dispatch(setCompletedLectures(courseData.completedVideos || []))
           dispatch(setCompletedQuizzes(courseData.completedQuizzes || []))
           dispatch(setPassedQuizzes(courseData.passedQuizzes || []))
-          
-          let lectures = 0
-          courseData?.courseDetails?.courseContent?.forEach((sec) => {
-            lectures += sec.subSection.length
-          })
-          dispatch(setTotalNoOfLectures(lectures))
-        } else {
-          console.error("Course data not found or invalid response")
-          // Handle the case where course data is not available
-          dispatch(setCourseSectionData([]))
-          dispatch(setEntireCourseData({}))
-          dispatch(setCompletedLectures([]))
-          dispatch(setCompletedQuizzes([]))
-          dispatch(setPassedQuizzes([]))
-          dispatch(setTotalNoOfLectures(0))
-          // Navigate to dashboard if course data is not available
-          navigate('/dashboard/enrolled-courses')
-          toast.error("Unable to access this course")
-        }
-      } catch (error) {
-        console.error("Error fetching course details:", error)
-        // Handle error case
-        dispatch(setCourseSectionData([]))
-        dispatch(setEntireCourseData({}))
-        dispatch(setCompletedLectures([]))
-        dispatch(setCompletedQuizzes([]))
-        dispatch(setPassedQuizzes([]))
-        dispatch(setTotalNoOfLectures(0))
-        // Navigate to dashboard on error
+          dispatch(setTotalNoOfLectures(totalLectures))
+        })
+      } else {
+        console.error("Course data not found or invalid response")
+        resetCourseState()
         navigate('/dashboard/enrolled-courses')
-        toast.error(error?.response?.data?.message || "Error loading course")
+        toast.error("Unable to access this course")
       }
-    })()
+    } catch (error) {
+      console.error("Error fetching course details:", error)
+      resetCourseState()
+      navigate('/dashboard/enrolled-courses')
+      toast.error(error?.response?.data?.message || "Error loading course")
+    } finally {
+      setLoading(false)
+    }
+  }, [courseId, token, navigate, dispatch, calculateTotalLectures, resetCourseState, currentCourseData])
 
-  }, [courseId, token, navigate])
-
-
-  // handle sidebar for small devices
-  const { courseViewSidebar } = useSelector(state => state.sidebar)
-  const [screenSize, setScreenSize] = useState(undefined)
-
-  // set curr screen Size
   useEffect(() => {
-    const handleScreenSize = () => setScreenSize(window.innerWidth)
+    fetchCourseDetails()
+  }, [fetchCourseDetails])
+
+
+  // Memoized sidebar handling for small devices
+  const { courseViewSidebar } = useSelector(state => state.sidebar)
+  const [screenSize, setScreenSize] = useState(window.innerWidth)
+
+  // Optimized resize handler with RAF for better performance
+  useEffect(() => {
+    let rafId;
+    let lastWidth = window.innerWidth;
+
+    const handleScreenSize = () => {
+      rafId = requestAnimationFrame(() => {
+        const currentWidth = window.innerWidth;
+        // Only update if width actually changed
+        if (currentWidth !== lastWidth) {
+          lastWidth = currentWidth;
+          setScreenSize(currentWidth);
+        }
+      });
+    };
 
     window.addEventListener('resize', handleScreenSize);
-    handleScreenSize();
-    return () => window.removeEventListener('resize', handleScreenSize);
-  })
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleScreenSize);
+    };
+  }, []);
 
-  // close / open sidebar according screen size
+  // Memoized sidebar visibility update
+  const updateSidebarVisibility = useCallback(() => {
+    dispatch(setCourseViewSidebar(screenSize > 640));
+  }, [screenSize, dispatch]);
+
   useEffect(() => {
-    if (screenSize <= 640) {
-      dispatch(setCourseViewSidebar(false))
-    } else dispatch(setCourseViewSidebar(true))
-  }, [screenSize])
+    updateSidebarVisibility();
+  }, [updateSidebarVisibility])
 
+  // Memoized components
+  const SidebarComponent = useMemo(() => (
+    courseViewSidebar && (
+      <div className="w-[320px]">
+        <VideoDetailsSidebar setReviewModal={setReviewModal} />
+      </div>
+    )
+  ), [courseViewSidebar, setReviewModal]);
+
+  const MainContent = useMemo(() => (
+    <div className="h-[calc(100vh-3.5rem)] flex-1 overflow-auto mt-14">
+      <div className="mx-6">
+        <Outlet />
+      </div>
+    </div>
+  ), []);
+
+  const ReviewModalComponent = useMemo(() => (
+    reviewModal && <CourseReviewModal setReviewModal={setReviewModal} />
+  ), [reviewModal, setReviewModal]);
+
+  // Loading state with optimized animation
+  if (loading) {
+    return (
+      <div className="min-h-[calc(100vh-3.5rem)] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-50 will-change-transform"></div>
+      </div>
+    )
+  }
 
   return (
     <>
-      <div className="relative flex min-h-[calc(100vh-3.5rem)] ">
-        {/* view course side bar */}
-        {courseViewSidebar && <VideoDetailsSidebar setReviewModal={setReviewModal} />}
-
-        <div className="h-[calc(100vh-3.5rem)] flex-1 overflow-auto mt-14">
-          <div className="mx-6">
-            <Outlet />
-          </div>
-        </div>
+      <div className="relative flex min-h-[calc(100vh-3.5rem)]">
+        {SidebarComponent}
+        {MainContent}
       </div>
-
-
-      {reviewModal && <CourseReviewModal setReviewModal={setReviewModal} />}
+      {ReviewModalComponent}
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import ProgressBar from "@ramonak/react-progress-bar"
 import { useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
@@ -15,23 +15,29 @@ export default function EnrolledCourses() {
   const [enrolledCourses, setEnrolledCourses] = useState(null)
   const [showCertificate, setShowCertificate] = useState(false)
   const [selectedCourse, setSelectedCourse] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const getEnrolledCourses = async () => {
+  const getEnrolledCourses = useCallback(async () => {
+    if (!token || enrolledCourses !== null) return; // Prevent duplicate calls
+    
+    setLoading(true);
     try {
       const res = await getUserEnrolledCourses(token);
       setEnrolledCourses(res);
     } catch (error) {
       console.log("Could not fetch enrolled courses.")
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [token, enrolledCourses]);
 
   useEffect(() => {
     getEnrolledCourses();
-  }, [token])
+  }, [getEnrolledCourses])
 
-  // Loading Skeleton
-  const SkeletonCard = () => (
-    <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 animate-pulse">
+  // Optimized Loading Skeleton
+  const SkeletonCard = useMemo(() => (
+    <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 animate-pulse">
       <div className="flex gap-6">
         <div className="h-20 w-20 rounded-xl bg-slate-700/50"></div>
         <div className="flex-1 space-y-4">
@@ -41,7 +47,38 @@ export default function EnrolledCourses() {
         </div>
       </div>
     </div>
-  )
+  ), [])
+
+  // Memoized navigation handler
+  const handleCourseNavigation = useCallback((course) => {
+    const firstSection = course.courseContent?.[0];
+    const firstSubSection = firstSection?.subSection?.[0];
+    if (firstSection && firstSubSection) {
+      navigate(`/view-course/${course._id}/section/${firstSection._id}/sub-section/${firstSubSection._id}`);
+    }
+  }, [navigate]);
+
+  // Memoized certificate handler
+  const handleCertificateGeneration = useCallback(async (course) => {
+    try {
+      const certificateData = await generateCertificate(
+        { courseId: course._id },
+        token
+      )
+      if (certificateData) {
+        setSelectedCourse({
+          courseName: course.courseName,
+          studentName: `${user?.firstName} ${user?.lastName}`,
+          email: user?.email,
+          completionDate: certificateData.completionDate || new Date().toISOString(),
+          certificateId: certificateData.certificateId
+        })
+        setShowCertificate(true)
+      }
+    } catch (error) {
+      console.error("Error generating certificate:", error)
+    }
+  }, [token, user]);
 
   if (enrolledCourses?.length === 0) {
     return (
@@ -78,11 +115,11 @@ export default function EnrolledCourses() {
       {/* Course List */}
       <div className="space-y-4">
         {/* Loading State */}
-        {!enrolledCourses && (
+        {loading && (
           <>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+            {SkeletonCard}
+            {SkeletonCard}
+            {SkeletonCard}
           </>
         )}
 
@@ -97,14 +134,15 @@ export default function EnrolledCourses() {
                 {/* Thumbnail */}
                 <div 
                   className="relative cursor-pointer"
-                  onClick={() => navigate(`/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`)}
+                  onClick={() => handleCourseNavigation(course)}
                 >
-                  <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
                   <div className="relative">
                     <Img
                       src={course.thumbnail}
                       alt={course.courseName}
                       className="h-20 w-20 rounded-xl object-cover"
+                      width={80}
+                      height={80}
                     />
                   </div>
                 </div>
@@ -112,8 +150,8 @@ export default function EnrolledCourses() {
                 {/* Course Info */}
                 <div className="flex-1 min-w-0">
                   <h3 
-                    className="text-lg font-semibold text-white mb-2 cursor-pointer hover:text-purple-400 transition-colors duration-300"
-                    onClick={() => navigate(`/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`)}
+                    className="text-lg font-semibold text-white mb-2 cursor-pointer hover:text-purple-400 transition-colors duration-200"
+                    onClick={() => handleCourseNavigation(course)}
                   >
                     {course.courseName}
                   </h3>
@@ -147,36 +185,19 @@ export default function EnrolledCourses() {
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4">
                     <button
-                      onClick={() => navigate(`/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`)}
-                      className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-all duration-300 text-sm font-medium"
+                      onClick={() => handleCourseNavigation(course)}
+                      className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-colors duration-200 text-sm font-medium"
                     >
                       Continue Learning
                     </button>
                     
                     {course.progressPercentage === 100 && (
                       <button
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.stopPropagation()
-                          try {
-                            const certificateData = await generateCertificate(
-                              { courseId: course._id },
-                              token
-                            )
-                            if (certificateData) {
-                              setSelectedCourse({
-                                courseName: course.courseName,
-                                studentName: `${user?.firstName} ${user?.lastName}`,
-                                email: user?.email,
-                                completionDate: certificateData.completionDate || new Date().toISOString(),
-                                certificateId: certificateData.certificateId
-                              })
-                              setShowCertificate(true)
-                            }
-                          } catch (error) {
-                            console.error("Error generating certificate:", error)
-                          }
+                          handleCertificateGeneration(course)
                         }}
-                        className="px-4 py-2 bg-green-500/10 text-green-400 rounded-xl hover:bg-green-500/20 transition-all duration-300 text-sm font-medium"
+                        className="px-4 py-2 bg-green-500/10 text-green-400 rounded-xl hover:bg-green-500/20 transition-colors duration-200 text-sm font-medium"
                       >
                         View Certificate
                       </button>

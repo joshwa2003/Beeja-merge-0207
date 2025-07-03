@@ -473,11 +473,22 @@ exports.sendMessage = async (req, res) => {
         const senderId = req.user.id;
         let imageUrl = null;
 
-        console.log('Sending message:', { chatId, messageType, senderId });
+        console.log('Sending message:', { 
+            chatId, 
+            messageType, 
+            senderId, 
+            hasFile: !!req.file,
+            fileDetails: req.file ? { 
+                originalname: req.file.originalname, 
+                mimetype: req.file.mimetype, 
+                size: req.file.size 
+            } : null
+        });
 
         // Verify chat exists and user has access
         const chat = await Chat.findById(chatId).populate('course');
         if (!chat) {
+            console.log('Chat not found:', chatId);
             return res.status(404).json({
                 success: false,
                 message: 'Chat not found'
@@ -489,7 +500,10 @@ exports.sendMessage = async (req, res) => {
         const isInstructor = chat.instructor.toString() === senderId;
         const isAdmin = req.user.accountType === 'Admin';
 
+        console.log('Access check:', { isStudent, isInstructor, isAdmin });
+
         if (!isStudent && !isInstructor && !isAdmin) {
+            console.log('Access denied for user:', senderId);
             return res.status(403).json({
                 success: false,
                 message: 'You do not have permission to send messages in this chat'
@@ -499,14 +513,63 @@ exports.sendMessage = async (req, res) => {
         // Handle image upload if messageType is image
         if (messageType === 'image') {
             if (!req.file) {
+                console.log('No file provided for image message');
                 return res.status(400).json({
                     success: false,
                     message: 'Image file is required for image messages'
                 });
             }
 
+            console.log('Starting image upload process...', {
+                file: {
+                    fieldname: req.file.fieldname,
+                    originalname: req.file.originalname,
+                    mimetype: req.file.mimetype,
+                    size: req.file.size
+                }
+            });
+
+            // Validate file type
+            if (!req.file.mimetype.startsWith('image/')) {
+                console.error('Invalid file type:', req.file.mimetype);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Only image files are allowed'
+                });
+            }
+
+            // Validate file size (5MB limit)
+            const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+            if (req.file.size > MAX_SIZE) {
+                console.error('File too large:', req.file.size);
+                return res.status(400).json({
+                    success: false,
+                    message: 'File size must be less than 5MB'
+                });
+            }
+
+            console.log('Uploading image to Cloudinary...');
             const uploadResult = await uploadImageToCloudinary(req.file, 'chat-images');
+            
+            console.log('Upload result received:', uploadResult);
+            
+            if (!uploadResult || !uploadResult.secure_url) {
+                console.error('Cloudinary upload failed:', uploadResult);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to upload image',
+                    error: uploadResult
+                });
+            }
+            
             imageUrl = uploadResult.secure_url;
+            console.log('Image uploaded successfully:', {
+                secure_url: imageUrl,
+                public_id: uploadResult.public_id,
+                format: uploadResult.format,
+                bytes: uploadResult.bytes,
+                created_at: uploadResult.created_at
+            });
         }
 
         // Create message
@@ -519,6 +582,7 @@ exports.sendMessage = async (req, res) => {
         });
 
         await message.save();
+        console.log('Message saved to database:', message._id);
 
         // Update chat's last message and timestamp
         await Chat.findByIdAndUpdate(chatId, {
@@ -566,6 +630,7 @@ exports.sendMessage = async (req, res) => {
             console.log(`Socket events emitted for chat ${chatId} and recipient ${recipientId}`);
         }
 
+        console.log('Message sent successfully');
         res.status(201).json({
             success: true,
             message: 'Message sent successfully',
@@ -573,7 +638,13 @@ exports.sendMessage = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('Error sending message:', {
+            message: error.message,
+            stack: error.stack,
+            chatId: req.body?.chatId,
+            messageType: req.body?.messageType,
+            senderId: req.user?.id
+        });
         res.status(500).json({
             success: false,
             message: 'Error sending message',

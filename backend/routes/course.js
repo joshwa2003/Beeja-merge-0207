@@ -87,7 +87,17 @@ router.get("/getInstructorCoursesForInstructor", auth, isInstructor, getInstruct
 
 
 // Edit Course routes - Allow both instructors and admins
-router.post("/editCourse", auth, upload.single('thumbnailImage'), editCourse)
+router.post("/editCourse", auth, upload.single('thumbnailImage'), (req, res, next) => {
+    // Allow both instructors and admins to edit courses
+    if (req.user.accountType === 'Instructor' || req.user.accountType === 'Admin') {
+        next();
+    } else {
+        return res.status(403).json({
+            success: false,
+            message: "Access denied. Only instructors and admins can edit courses."
+        });
+    }
+}, editCourse)
 
 // Delete a Course - Allow both instructors and admins
 router.delete("/deleteCourse", auth, deleteCourse)

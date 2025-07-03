@@ -363,13 +363,13 @@ export const sendMessage = async (chatId, content, messageType = 'text', image =
       formData.append('image', image);
     }
 
+    // Don't set Content-Type header manually for FormData - axios will handle it
     const response = await apiConnector(
       "POST",
       SEND_MESSAGE_API,
       formData,
       {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
       }
     );
 

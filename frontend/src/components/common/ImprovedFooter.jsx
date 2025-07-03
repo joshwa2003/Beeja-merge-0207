@@ -21,7 +21,7 @@ import {
 } from "react-icons/fi";
 
 // Images
-import StudyNotionLogo from "../../assets/Logo/Logo-Full-Light.png";
+import BeejaLogo from "../../assets/Logo/Logo-Small-Light.png";
 
 // Footer data
 const BottomFooter = ["Privacy Policy", "Cookie Policy", "Terms"];
@@ -69,7 +69,7 @@ const ImprovedFooter = () => {
             >
               <div className="space-y-4">
                 <img 
-                  src={StudyNotionLogo} 
+                  src={BeejaLogo} 
                   alt="Beeja Logo" 
                   className="h-8 sm:h-10 object-contain" 
                 />

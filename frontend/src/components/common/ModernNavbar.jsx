@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { logout } from "../../services/operations/authAPI";
 
 import { NavbarLinks } from "../../../data/navbar-links";
-import studyNotionLogo from "../../assets/Logo/Logo-Full-Light.png";
+import BeejaLogo from "../../assets/Logo/Logo-Small-Light.png";
 import { fetchCourseCategories } from "./../../services/operations/courseDetailsAPI";
 
 import { AiOutlineShoppingCart } from "react-icons/ai";
@@ -103,7 +103,7 @@ const ModernNavbar = () => {
         >
           <Link to="/" aria-label="Home">
             <img
-              src={studyNotionLogo}
+              src={BeejaLogo}
               width={120}
               height={30}
               loading="lazy"

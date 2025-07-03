@@ -522,12 +522,25 @@ exports.getFullCourseDetails = async (req, res) => {
 // ================ Edit Course Details ================
 exports.editCourse = async (req, res) => {
     try {
-        const { courseId } = req.body
-        const updates = req.body
-        const course = await Course.findById(courseId)
+        console.log("Edit Course Request Body:", req.body);
+        console.log("Edit Course Request File:", req.file);
+        
+        const { courseId } = req.body;
+        if (!courseId) {
+            return res.status(400).json({
+                success: false,
+                message: "Course ID is required"
+            });
+        }
+
+        const updates = req.body;
+        const course = await Course.findById(courseId);
 
         if (!course) {
-            return res.status(404).json({ error: "Course not found" })
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
         }
 
         // Check if user is instructor and owns the course, or is admin
@@ -535,29 +548,51 @@ exports.editCourse = async (req, res) => {
             return res.status(403).json({ 
                 success: false,
                 message: "You don't have permission to edit this course" 
-            })
+            });
         }
 
-        // If Thumbnail Image is found, update it
+        // Handle Thumbnail Image Update
         if (req.file) {
-            // console.log("thumbnail update")
-            const thumbnailImage = await uploadImageToCloudinary(
-                req.file,
-                process.env.FOLDER_NAME
-            )
-            course.thumbnail = thumbnailImage.secure_url
+            try {
+                console.log("Uploading new thumbnail image");
+                const thumbnailImage = await uploadImageToCloudinary(
+                    req.file,
+                    process.env.FOLDER_NAME
+                );
+                if (!thumbnailImage || !thumbnailImage.secure_url) {
+                    throw new Error("Failed to upload thumbnail image");
+                }
+                course.thumbnail = thumbnailImage.secure_url;
+            } catch (error) {
+                console.error("Thumbnail upload error:", error);
+                return res.status(500).json({
+                    success: false,
+                    message: "Error uploading thumbnail image"
+                });
+            }
         }
 
-        // Convert FormData to plain object if needed
+        // Handle JSON fields and other updates
         const updateData = {};
         for (const [key, value] of Object.entries(updates)) {
             if (key === "tag" || key === "instructions") {
                 try {
-                    updateData[key] = JSON.parse(value);
+                    updateData[key] = typeof value === 'string' ? JSON.parse(value) : value;
+                    // Validate array fields
+                    if (!Array.isArray(updateData[key])) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Invalid ${key} format. Expected an array`
+                        });
+                    }
                 } catch (e) {
-                    updateData[key] = value;
+                    console.error(`Error parsing ${key}:`, e);
+                    return res.status(400).json({
+                        success: false,
+                        message: `Invalid ${key} format`
+                    });
                 }
-            } else {
+            } else if (key !== 'courseId' && key !== 'thumbnailImage') {
                 updateData[key] = value;
             }
         }

@@ -272,6 +272,7 @@ connectDB();
 cloudinaryConnect();
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server Started on PORT ${PORT}`);
+    console.log(`Socket.IO server is running on http://localhost:${PORT}`);
 });

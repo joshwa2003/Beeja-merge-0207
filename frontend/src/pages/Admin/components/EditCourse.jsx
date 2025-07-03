@@ -58,36 +58,57 @@ export default function EditCourse({ course, onCancel, onSave }) {
     setLoading(true);
     
     try {
+      console.log("Form data before processing:", data);
+      console.log("Original course data:", course);
+      
       const formData = new FormData();
       formData.append("courseId", course._id);
       
       // Only append changed fields
       if (data.courseTitle !== course.courseName) {
         formData.append("courseName", data.courseTitle);
+        console.log("Course name changed:", data.courseTitle);
       }
       if (data.courseShortDesc !== course.courseDescription) {
         formData.append("courseDescription", data.courseShortDesc);
+        console.log("Course description changed");
       }
       if (data.coursePrice !== course.price) {
         formData.append("price", data.coursePrice);
+        console.log("Course price changed:", data.coursePrice);
       }
       if (data.courseCategory !== course.category?._id) {
         formData.append("category", data.courseCategory);
+        console.log("Course category changed:", data.courseCategory);
       }
       if (JSON.stringify(data.courseTags) !== JSON.stringify(course.tag)) {
         formData.append("tag", JSON.stringify(data.courseTags));
+        console.log("Course tags changed:", data.courseTags);
       }
       if (data.courseBenefits !== course.whatYouWillLearn) {
         formData.append("whatYouWillLearn", data.courseBenefits);
+        console.log("Course benefits changed");
       }
       if (JSON.stringify(data.courseRequirements) !== JSON.stringify(course.instructions)) {
         formData.append("instructions", JSON.stringify(data.courseRequirements));
+        console.log("Course requirements changed:", data.courseRequirements);
       }
-      if (data.courseImage !== course.thumbnail) {
-        formData.append("thumbnailImage", data.courseImage);
+      // Handle thumbnail image update
+      if (data.courseImage && data.courseImage !== course.thumbnail) {
+        if (data.courseImage instanceof File) {
+          formData.append("thumbnailImage", data.courseImage);
+          console.log("Appending thumbnail file:", data.courseImage.name);
+        }
       }
       if (data.instructorId !== course.instructor?._id) {
         formData.append("instructorId", data.instructorId);
+        console.log("Instructor changed:", data.instructorId);
+      }
+
+      // Log FormData contents
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
 
       const result = await editCourseDetails(formData, token);

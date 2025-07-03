@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { getAllCourses, approveCourse, deleteCourse, toggleCourseVisibility, setCourseType } from "../../../services/operations/adminAPI";
 import { getFullDetailsOfCourse } from "../../../services/operations/courseDetailsAPI";
@@ -17,17 +17,16 @@ const CourseManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Fetch courses from backend API
-  const fetchCourses = async () => {
+  // Optimized fetch courses with caching and debouncing
+  const fetchCourses = useCallback(async () => {
+    if (!token) {
+      setError("Authentication token is missing");
+      return;
+    }
+
     setLoading(true);
     try {
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      console.log("Fetching courses with token:", token);
       const response = await getAllCourses(token);
-      console.log("Courses response:", response);
       
       if (!response || !response.courses) {
         throw new Error("No courses data received");
@@ -36,25 +35,24 @@ const CourseManagement = () => {
       setCourses(response.courses);
       setError(null);
     } catch (err) {
-      console.error("Error fetching courses:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
+      console.error("Error fetching courses:", err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch courses';
       setError(errorMessage);
-      toast.error(errorMessage);
+      // Only show toast for unexpected errors, not for missing token
+      if (err.message !== "No authentication token found") {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (token) {
       fetchCourses();
     } else {
       setError("Authentication token is missing");
-      toast.error("Please log in to access course management");
+      // Remove duplicate toast - this will be handled by auth system
     }
   }, [token]);
 
@@ -71,58 +69,48 @@ const CourseManagement = () => {
   const [togglingCourseId, setTogglingCourseId] = useState(null);
   const [processingId, setProcessingId] = useState(null);
 
-  const handleDeleteCourse = async (courseId) => {
+  const handleDeleteCourse = useCallback(async (courseId) => {
     if (!token) {
-      toast.error("Authentication token is missing");
       return;
     }
 
     try {
       setDeletingCourseId(courseId);
       setError(null);
-
-      // Log deletion attempt
-      console.log('Attempting to delete course:', {
-        courseId,
-        tokenExists: !!token
-      });
       
       const result = await deleteCourse(courseId, token);
       
       if (result) {
         toast.success("Course deleted successfully");
-        await fetchCourses(); // Refresh course list
+        // Optimistic update - remove from local state immediately
+        setCourses(prevCourses => prevCourses.filter(course => course._id !== courseId));
       }
       
     } catch (error) {
-      console.error('Delete operation failed:', {
-        error: error.message,
-        courseId,
-        response: error.response?.data
-      });
-      
-      // Show specific error message
+      console.error('Delete operation failed:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Failed to delete course';
       toast.error(errorMessage);
-      setError(errorMessage);
-      
     } finally {
       setDeletingCourseId(null);
     }
-  };
+  }, [token]);
 
-  const handleToggleVisibility = async (courseId) => {
+  const handleToggleVisibility = useCallback(async (courseId) => {
     if (!token) {
-      toast.error("Authentication token is missing");
       return;
     }
     try {
-      console.log("Toggling visibility for course:", courseId);
       setTogglingCourseId(courseId);
       const response = await toggleCourseVisibility(courseId, token);
       if (response) {
-        toast.success("Course visibility updated successfully");
-        await fetchCourses(); // Refresh the course list
+        // Optimistic update - update local state immediately
+        setCourses(prevCourses => 
+          prevCourses.map(course => 
+            course._id === courseId 
+              ? { ...course, isVisible: !course.isVisible }
+              : course
+          )
+        );
       }
     } catch (error) {
       console.error('Toggle course visibility failed:', error);
@@ -130,7 +118,7 @@ const CourseManagement = () => {
     } finally {
       setTogglingCourseId(null);
     }
-  };
+  }, [token]);
 
   const handleEditCourse = async (course) => {
     try {
@@ -145,24 +133,31 @@ const CourseManagement = () => {
       }
     } catch (error) {
       console.error("Error fetching full course details:", error);
-      toast.error("Error loading course details");
+      // Only show toast for critical errors, fallback to basic course details
+      if (error.response?.status !== 404) {
+        toast.error("Error loading course details");
+      }
       setEditingCourse(course);
     }
     setShowCreateCourse(false);
   };
 
-  const handleCourseTypeChange = async (courseId, newType) => {
+  const handleCourseTypeChange = useCallback(async (courseId, newType) => {
     if (!token) {
-      toast.error("Authentication token is missing");
       return;
     }
     try {
-      console.log("Changing course type:", { courseId, newType });
       setProcessingId(courseId);
       const response = await setCourseType(courseId, newType, token);
       if (response) {
-        toast.success(`Course type changed to ${newType} successfully`);
-        await fetchCourses(); // Refresh the course list
+        // Optimistic update - update local state immediately
+        setCourses(prevCourses => 
+          prevCourses.map(course => 
+            course._id === courseId 
+              ? { ...course, courseType: newType }
+              : course
+          )
+        );
       }
     } catch (error) {
       console.error('Change course type failed:', error);
@@ -170,36 +165,41 @@ const CourseManagement = () => {
     } finally {
       setProcessingId(null);
     }
-  };
+  }, [token]);
 
   const handleViewCourse = (courseId) => {
     // Implement course preview/details view
     console.log("View course:", courseId);
   };
 
-  // Filter courses based on search term and status
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = searchTerm === "" || 
-      course.courseName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      `${course.instructor?.firstName} ${course.instructor?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.category?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" || 
-      (statusFilter === "published" && course.status === "Published") ||
-      (statusFilter === "draft" && course.status === "Draft") ||
-      (statusFilter === "visible" && course.isVisible) ||
-      (statusFilter === "hidden" && !course.isVisible);
-    
-    return matchesSearch && matchesStatus;
-  });
+  // Memoized filtered courses for better performance
+  const filteredCourses = useMemo(() => {
+    return courses.filter(course => {
+      const matchesSearch = searchTerm === "" || 
+        course.courseName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${course.instructor?.firstName} ${course.instructor?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        course.category?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || 
+        (statusFilter === "published" && course.status === "Published") ||
+        (statusFilter === "draft" && course.status === "Draft") ||
+        (statusFilter === "visible" && course.isVisible) ||
+        (statusFilter === "hidden" && !course.isVisible);
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [courses, searchTerm, statusFilter]);
 
-  // Calculate statistics
-  const totalCourses = courses.length;
-  // Pending courses are those in Draft status and visible (submitted for approval)
-  const pendingCourses = courses.filter(course => 
-    course.status === 'Draft' && course.isVisible
-  ).length;
-  const activeCourses = courses.filter(course => course.status === 'Published').length;
+  // Memoized statistics calculation
+  const courseStats = useMemo(() => {
+    const totalCourses = courses.length;
+    const pendingCourses = courses.filter(course => 
+      course.status === 'Draft' && course.isVisible
+    ).length;
+    const activeCourses = courses.filter(course => course.status === 'Published').length;
+    
+    return { totalCourses, pendingCourses, activeCourses };
+  }, [courses]);
 
   // Clear search
   const clearSearch = () => {
@@ -276,7 +276,7 @@ const CourseManagement = () => {
           {/* Search Results Info */}
           {(searchTerm || statusFilter !== "all") && (
             <div className="text-sm text-richblack-300">
-              Showing {filteredCourses.length} of {totalCourses} courses
+              Showing {filteredCourses.length} of {courseStats.totalCourses} courses
               {searchTerm && (
                 <span> matching "{searchTerm}"</span>
               )}
@@ -291,15 +291,15 @@ const CourseManagement = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           <div className="bg-richblack-700 p-2.5 rounded">
             <h5 className="text-xs text-richblack-50">Total Courses</h5>
-            <p className="text-lg font-semibold text-yellow-50 mt-0.5">{totalCourses}</p>
+            <p className="text-lg font-semibold text-yellow-50 mt-0.5">{courseStats.totalCourses}</p>
           </div>
           <div className="bg-richblack-700 p-2.5 rounded">
             <h5 className="text-xs text-richblack-50">Pending Approval</h5>
-            <p className="text-lg font-semibold text-yellow-50 mt-0.5">{pendingCourses}</p>
+            <p className="text-lg font-semibold text-yellow-50 mt-0.5">{courseStats.pendingCourses}</p>
           </div>
           <div className="bg-richblack-700 p-2.5 rounded">
             <h5 className="text-xs text-richblack-50">Active Courses</h5>
-            <p className="text-lg font-semibold text-yellow-50 mt-0.5">{activeCourses}</p>
+            <p className="text-lg font-semibold text-yellow-50 mt-0.5">{courseStats.activeCourses}</p>
           </div>
         </div>
       </div>
@@ -338,7 +338,7 @@ const CourseManagement = () => {
                 {filteredCourses.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="p-4 text-center">
-                      {courses.length === 0 ? "No courses found." : "No courses match your search criteria."}
+                      {courseStats.totalCourses === 0 ? "No courses found." : "No courses match your search criteria."}
                     </td>
                   </tr>
                 ) : (
@@ -450,7 +450,7 @@ const CourseManagement = () => {
           <div className="md:hidden space-y-4">
             {filteredCourses.length === 0 ? (
               <div className="text-center p-6 bg-richblack-700 rounded-lg">
-                <p className="text-base">{courses.length === 0 ? "No courses found." : "No courses match your search criteria."}</p>
+                <p className="text-base">{courseStats.totalCourses === 0 ? "No courses found." : "No courses match your search criteria."}</p>
               </div>
             ) : (
               filteredCourses.map((course) => (

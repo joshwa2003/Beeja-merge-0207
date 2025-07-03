@@ -9,7 +9,15 @@ const uploadWithRetry = async (file, options, retryCount = 0) => {
     try {
         return await new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
-                options,
+                {
+                    ...options,
+                    // Enhanced upload options for better performance
+                    use_filename: true, // Use original filename
+                    unique_filename: true, // Ensure unique names
+                    overwrite: false, // Don't overwrite existing files
+                    invalidate: true, // Invalidate CDN cache if overwriting
+                    async: true, // Use async upload for better performance
+                },
                 (error, result) => {
                     if (error) reject(error);
                     else resolve(result);
@@ -49,46 +57,89 @@ const uploadWithRetry = async (file, options, retryCount = 0) => {
 
 exports.uploadImageToCloudinary = async (file, folder, height, quality) => {
     try {
-        console.log('🔧 Starting upload with enhanced options');
+        console.log('🔧 Starting file upload to Cloudinary');
+        console.log('File details:', {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+            folder: folder
+        });
+        
+        // Base options for all uploads
         const options = { 
             folder,
-            // Add chunked upload for large files
-            chunk_size: 6000000, // 6MB chunks
-            // Add timeout settings
-            timeout: 600000, // 10 minutes
+            resource_type: 'auto',
+            use_filename: true,
+            unique_filename: true,
+            overwrite: true, // Changed to true to ensure updates work
+            secure: true,
+            quality: quality || 'auto:good'
         };
 
-        if (height) options.height = height;
-        if (quality) options.quality = quality;
+        // Add transformation options if height is specified
+        if (height) {
+            options.height = height;
+            options.crop = 'scale';
+        }
 
-        // Enhanced video upload configuration
-        if (file.mimetype && file.mimetype.startsWith('video/')) {
-            options.resource_type = 'video';
-            console.log('🎥 Video upload detected - using enhanced video configuration');
-            
-            // Add video-specific optimizations
+        // Specific options based on folder/usage
+        if (folder === 'chat-images') {
+            // Chat images need immediate processing
+            options.async = false;
+        } else if (folder.includes('course')) {
+            // Course-related images get optimization
             options.eager = [
-                { streaming_profile: "full_hd", format: "m3u8" } // HLS streaming
+                { width: 1024, crop: "scale" }, // Desktop
+                { width: 768, crop: "scale" },  // Tablet
+                { width: 480, crop: "scale" }   // Mobile
             ];
             options.eager_async = true;
-            options.eager_notification_url = process.env.CLOUDINARY_NOTIFICATION_URL;
-        } else {
-            options.resource_type = 'auto';
         }
         
-        console.log('📋 Enhanced upload options:', JSON.stringify(options, null, 2));
+        console.log('📋 Upload options:', JSON.stringify(options, null, 2));
         
-        // Use enhanced upload with retry mechanism
-        return await uploadWithRetry(file, options);
+        // Use upload with retry for important files (like course thumbnails)
+        const result = await new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                options,
+                (error, result) => {
+                    if (error) {
+                        console.error('Cloudinary upload error:', error);
+                        reject(error);
+                    } else {
+                        console.log('Cloudinary upload result:', {
+                            secure_url: result.secure_url,
+                            public_id: result.public_id,
+                            format: result.format,
+                            resource_type: result.resource_type,
+                            status: result.status || 'completed'
+                        });
+                        resolve(result);
+                    }
+                }
+            );
+
+            if (file.buffer) {
+                uploadStream.end(file.buffer);
+            } else {
+                reject(new Error('File buffer is required'));
+            }
+        });
+
+        console.log('✅ Upload successful:', {
+            secure_url: result.secure_url,
+            public_id: result.public_id
+        });
+
+        return result;
     }
     catch (error) {
-        console.log("Error while uploading file to Cloudinary");
-        console.log(error);
-        throw error;
+        console.error("Error while uploading file to Cloudinary:", error);
+        throw new Error(`Failed to upload file: ${error.message}`);
     }
 }
 
-// Function to delete a resource by public ID
+// Enhanced function to delete a resource by public ID with invalidation
 exports.deleteResourceFromCloudinary = async (url) => {
     if (!url) return;
 
@@ -117,7 +168,16 @@ exports.deleteResourceFromCloudinary = async (url) => {
             }
         }
 
-        const result = await cloudinary.uploader.destroy(publicId);
+        // Delete with enhanced options
+        const result = await cloudinary.uploader.destroy(publicId, {
+            invalidate: true, // Invalidate CDN cache
+            resource_type: 'auto', // Auto-detect resource type
+            type: 'upload', // Specify upload type
+        });
+
+        // Also delete any derived resources
+        await cloudinary.api.delete_derived_resources(publicId);
+
         console.log(`Deleted resource with public ID: ${publicId}`);
         return result;
     } catch (error) {

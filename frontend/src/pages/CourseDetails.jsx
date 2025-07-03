@@ -193,14 +193,9 @@ function CourseDetails() {
   return (
     <>
       {/* Background with Gradient and Particles */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="relative z-0"
-      >
+
         <BackgroundEffect />
-      </motion.div>
+      
 
       {/* Enhanced Professional Hero Section */}
       <div className="relative w-full bg-gradient-to-br from-richblack-900 via-richblack-800 to-richblack-700 z-10">
