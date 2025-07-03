@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { getAnalytics } from '../../../../services/operations/adminAPI'
-import CourseTypeManager from './CourseTypeManager'
 import CourseAccessRequests from './CourseAccessRequests'
 import IconBtn from '../../../common/IconBtn'
 
@@ -9,7 +8,7 @@ export default function AdminDashboard() {
   const { token } = useSelector((state) => state.auth)
   const [analytics, setAnalytics] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState('analytics') // ['analytics', 'courseTypes', 'accessRequests']
+  const [activeTab, setActiveTab] = useState('analytics') // ['analytics', 'accessRequests']
 
   useEffect(() => {
     fetchAnalytics()
@@ -28,10 +27,6 @@ export default function AdminDashboard() {
     {
       id: 'analytics',
       label: 'Analytics',
-    },
-    {
-      id: 'courseTypes',
-      label: 'Course Types',
     },
     {
       id: 'accessRequests',
@@ -100,7 +95,7 @@ export default function AdminDashboard() {
                 {analytics?.requests?.pendingAccessRequests > 0 && (
                   <IconBtn
                     text="View Requests"
-                    onclick={() => setActiveTab('accessRequests')}
+                    onClick={() => setActiveTab('accessRequests')}
                     customClasses="mt-4"
                   />
                 )}
@@ -108,9 +103,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-
-        {/* Course Type Management Section */}
-        {activeTab === 'courseTypes' && <CourseTypeManager />}
 
         {/* Access Requests Section */}
         {activeTab === 'accessRequests' && <CourseAccessRequests />}

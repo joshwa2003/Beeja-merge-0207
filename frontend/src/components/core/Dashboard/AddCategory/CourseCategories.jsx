@@ -113,33 +113,37 @@ export default function CourseCategories() {
   const onSubmit = async (data) => {
     setLoading(true)
     
-    const categoryData = {
-      name: data.categoryName,
-      description: data.categoryDescription,
-      icon: selectedIcon
+    try {
+      const categoryData = {
+        name: data.categoryName,
+        description: data.categoryDescription,
+        icon: selectedIcon
+      }
+      
+      let result
+      if (editingCategory) {
+        // Update existing category
+        categoryData.categoryId = editingCategory._id
+        result = await updateCategory(categoryData, token)
+      } else {
+        // Create new category
+        result = await createCategory(categoryData, token)
+      }
+      
+      if (result) {
+        reset()
+        setSelectedIcon('FaBook')
+        setShowCreateForm(false)
+        setShowIconPicker(false)
+        setEditingCategory(null)
+        // Reload categories to show the updated list
+        loadCategories()
+      }
+    } catch (error) {
+      console.error('Error in onSubmit:', error)
+    } finally {
+      setLoading(false)
     }
-    
-    let result
-    if (editingCategory) {
-      // Update existing category
-      categoryData.categoryId = editingCategory._id
-      result = await updateCategory(categoryData, token)
-    } else {
-      // Create new category
-      result = await createCategory(categoryData, token)
-    }
-    
-    if (result) {
-      reset()
-      setSelectedIcon('FaBook')
-      setShowCreateForm(false)
-      setShowIconPicker(false)
-      setEditingCategory(null)
-      // Reload categories to show the updated list
-      loadCategories()
-    }
-    
-    setLoading(false)
   }
 
   const renderIcon = (iconName) => {
@@ -381,6 +385,7 @@ export default function CourseCategories() {
                 disabled={loading}
                 text={loading ? (editingCategory ? "Updating..." : "Creating...") : (editingCategory ? "Update Category" : "Create Category")}
                 customClasses="flex-[2]"
+                type="submit"
               />
             </div>
           </div>

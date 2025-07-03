@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { getAllCourses, approveCourse, deleteCourse, toggleCourseVisibility } from "../../../services/operations/adminAPI";
+import { getAllCourses, approveCourse, deleteCourse, toggleCourseVisibility, setCourseType } from "../../../services/operations/adminAPI";
 import { getFullDetailsOfCourse } from "../../../services/operations/courseDetailsAPI";
-import { FaCheck, FaTrash, FaEye, FaEyeSlash, FaPlus, FaEdit, FaSearch, FaTimes } from "react-icons/fa";
+import { FaCheck, FaTrash, FaEye, FaEyeSlash, FaPlus, FaEdit, FaSearch, FaTimes, FaDollarSign, FaTag } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import CreateCourse from "./CreateCourse/CreateCourse";
 import EditCourse from "./EditCourse";
@@ -69,6 +69,7 @@ const CourseManagement = () => {
 
   const [deletingCourseId, setDeletingCourseId] = useState(null);
   const [togglingCourseId, setTogglingCourseId] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
 
   const handleDeleteCourse = async (courseId) => {
     if (!token) {
@@ -148,6 +149,27 @@ const CourseManagement = () => {
       setEditingCourse(course);
     }
     setShowCreateCourse(false);
+  };
+
+  const handleCourseTypeChange = async (courseId, newType) => {
+    if (!token) {
+      toast.error("Authentication token is missing");
+      return;
+    }
+    try {
+      console.log("Changing course type:", { courseId, newType });
+      setProcessingId(courseId);
+      const response = await setCourseType(courseId, newType, token);
+      if (response) {
+        toast.success(`Course type changed to ${newType} successfully`);
+        await fetchCourses(); // Refresh the course list
+      }
+    } catch (error) {
+      console.error('Change course type failed:', error);
+      toast.error(error.response?.data?.message || 'Failed to change course type');
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleViewCourse = (courseId) => {
@@ -307,6 +329,7 @@ const CourseManagement = () => {
                   <th className="p-3 border border-richblack-600">Instructor</th>
                   <th className="p-3 border border-richblack-600">Category</th>
                   <th className="p-3 border border-richblack-600">Price</th>
+                  <th className="p-3 border border-richblack-600">Course Type</th>
                   <th className="p-3 border border-richblack-600">Status</th>
                   <th className="p-3 border border-richblack-600">Actions</th>
                 </tr>
@@ -314,7 +337,7 @@ const CourseManagement = () => {
               <tbody>
                 {filteredCourses.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="p-4 text-center">
+                    <td colSpan="7" className="p-4 text-center">
                       {courses.length === 0 ? "No courses found." : "No courses match your search criteria."}
                     </td>
                   </tr>
@@ -329,6 +352,15 @@ const CourseManagement = () => {
                       <td className="p-3">₹{course.price}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded text-xs ${
+                          course.courseType === 'Free'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-blue-500/20 text-blue-400'
+                        }`}>
+                          {course.courseType || 'Paid'}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${
                           course.status === 'Published'
                             ? 'bg-green-500/20 text-green-400'
                             : 'bg-yellow-500/20 text-yellow-400'
@@ -338,27 +370,50 @@ const CourseManagement = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleToggleVisibility(course._id)}
-                            className={`flex items-center gap-2 px-3 py-1.5 ${
-                              course.isVisible 
-                                ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' 
-                                : 'bg-gray-500/10 text-gray-400 hover:bg-gray-500/20'
-                            } rounded-lg transition-colors disabled:opacity-50`}
-                            disabled={togglingCourseId === course._id}
-                            title={course.isVisible ? 'Hide Course' : 'Show Course'}
-                          >
-                            {togglingCourseId === course._id ? (
-                              <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
-                            ) : (
-                              <>
-                                {course.isVisible ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
-                                <span className="text-xs font-medium">
-                                  {course.isVisible ? 'Visible' : 'Hidden'}
-                                </span>
-                              </>
-                            )}
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleToggleVisibility(course._id)}
+                              className={`flex items-center gap-2 px-3 py-1.5 ${
+                                course.isVisible 
+                                  ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' 
+                                  : 'bg-gray-500/10 text-gray-400 hover:bg-gray-500/20'
+                              } rounded-lg transition-colors disabled:opacity-50`}
+                              disabled={togglingCourseId === course._id}
+                              title={course.isVisible ? 'Hide Course' : 'Show Course'}
+                            >
+                              {togglingCourseId === course._id ? (
+                                <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
+                              ) : (
+                                <>
+                                  {course.isVisible ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+                                  <span className="text-xs font-medium">
+                                    {course.isVisible ? 'Visible' : 'Hidden'}
+                                  </span>
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleCourseTypeChange(course._id, course.courseType === 'Free' ? 'Paid' : 'Free')}
+                              className={`flex items-center gap-2 px-3 py-1.5 ${
+                                course.courseType === 'Free'
+                                  ? 'bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20'
+                                  : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                              } rounded-lg transition-colors disabled:opacity-50`}
+                              disabled={processingId === course._id}
+                              title={course.courseType === 'Free' ? 'Make Paid' : 'Make Free'}
+                            >
+                              {processingId === course._id ? (
+                                <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
+                              ) : (
+                                <>
+                                  {course.courseType === 'Free' ? <FaDollarSign size={16} /> : <FaTag size={16} />}
+                                  <span className="text-xs font-medium">
+                                    {course.courseType === 'Free' ? 'Make Paid' : 'Make Free'}
+                                  </span>
+                                </>
+                              )}
+                            </button>
+                          </>
                           <button
                             onClick={() => handleEditCourse(course)}
                             className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded-lg transition-colors"
@@ -395,81 +450,125 @@ const CourseManagement = () => {
           <div className="md:hidden space-y-4">
             {filteredCourses.length === 0 ? (
               <div className="text-center p-6 bg-richblack-700 rounded-lg">
-                <p>{courses.length === 0 ? "No courses found." : "No courses match your search criteria."}</p>
+                <p className="text-base">{courses.length === 0 ? "No courses found." : "No courses match your search criteria."}</p>
               </div>
             ) : (
               filteredCourses.map((course) => (
-                <div key={course._id} className="bg-richblack-700 rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between items-start">
+                <div key={course._id} className="bg-richblack-700 rounded-lg p-5 space-y-4">
+                  {/* Header Section */}
+                  <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <h5 className="font-semibold text-white truncate">{course.courseName}</h5>
-                      <p className="text-sm text-richblack-300">
+                      <h5 className="font-semibold text-white text-lg leading-tight mb-1">{course.courseName}</h5>
+                      <p className="text-base text-richblack-300">
                         {course.instructor?.firstName} {course.instructor?.lastName}
                       </p>
                     </div>
-                    <span className={`px-2 py-1 rounded text-xs ml-2 ${
-                      course.status === 'Published'
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {course.status || 'Draft'}
-                    </span>
+                    <div className="flex flex-col gap-2 items-end">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        course.status === 'Published'
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {course.status || 'Draft'}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        course.courseType === 'Free'
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {course.courseType || 'Paid'}
+                      </span>
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 text-sm text-richblack-300">
-                    <div>
-                      <span className="font-medium">Category:</span> {course.category?.name || 'N/A'}
+                  {/* Course Details */}
+                  <div className="grid grid-cols-1 gap-3 text-base text-richblack-300">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Category:</span> 
+                      <span>{course.category?.name || 'N/A'}</span>
                     </div>
-                    <div>
-                      <span className="font-medium">Price:</span> ₹{course.price}
+                    <div className="flex justify-between">
+                      <span className="font-medium">Price:</span> 
+                      <span className="font-semibold text-yellow-50">₹{course.price}</span>
                     </div>
                   </div>
                   
-                  <div className="flex justify-end gap-2 pt-2 border-t border-richblack-600">
-                    <button
-                      onClick={() => handleToggleVisibility(course._id)}
-                      className={`flex items-center gap-1 px-3 py-2 rounded ${
-                        course.isVisible 
-                          ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' 
-                          : 'bg-gray-500/10 text-gray-400 hover:bg-gray-500/20'
-                      } transition-colors disabled:opacity-50`}
-                      disabled={togglingCourseId === course._id}
-                      title={course.isVisible ? 'Hide Course' : 'Show Course'}
-                    >
-                      {togglingCourseId === course._id ? (
-                        <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
-                      ) : (
-                        <>
-                          {course.isVisible ? <FaEye size={14} /> : <FaEyeSlash size={14} />}
-                          <span className="text-xs">
-                            {course.isVisible ? 'Visible' : 'Hidden'}
-                          </span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleEditCourse(course)}
-                      className="flex items-center gap-1 px-3 py-2 bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 rounded transition-colors"
-                      title="Edit Course"
-                    >
-                      <FaEdit size={14} />
-                      <span className="text-xs">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCourse(course._id)}
-                      disabled={deletingCourseId === course._id}
-                      className="flex items-center gap-1 px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded transition-colors disabled:opacity-50"
-                      title="Delete Course"
-                    >
-                      {deletingCourseId === course._id ? (
-                        <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
-                      ) : (
-                        <>
-                          <FaTrash size={14} />
-                          <span className="text-xs">Delete</span>
-                        </>
-                      )}
-                    </button>
+                  {/* Action Buttons - Two Rows for Better Mobile UX */}
+                  <div className="space-y-3 pt-3 border-t border-richblack-600">
+                    {/* First Row - Toggle Actions */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleToggleVisibility(course._id)}
+                        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                          course.isVisible 
+                            ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25' 
+                            : 'bg-gray-500/15 text-gray-400 hover:bg-gray-500/25'
+                        }`}
+                        disabled={togglingCourseId === course._id}
+                        title={course.isVisible ? 'Hide Course' : 'Show Course'}
+                      >
+                        {togglingCourseId === course._id ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
+                        ) : (
+                          <>
+                            {course.isVisible ? <FaEye size={16} /> : <FaEyeSlash size={16} />}
+                            <span>
+                              {course.isVisible ? 'Visible' : 'Hidden'}
+                            </span>
+                          </>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => handleCourseTypeChange(course._id, course.courseType === 'Free' ? 'Paid' : 'Free')}
+                        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                          course.courseType === 'Free'
+                            ? 'bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/25'
+                            : 'bg-green-500/15 text-green-400 hover:bg-green-500/25'
+                        }`}
+                        disabled={processingId === course._id}
+                        title={course.courseType === 'Free' ? 'Make Paid' : 'Make Free'}
+                      >
+                        {processingId === course._id ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
+                        ) : (
+                          <>
+                            {course.courseType === 'Free' ? <FaDollarSign size={16} /> : <FaTag size={16} />}
+                            <span>
+                              {course.courseType === 'Free' ? 'Make Paid' : 'Make Free'}
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Second Row - Edit and Delete */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => handleEditCourse(course)}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/25 rounded-lg text-sm font-medium transition-colors"
+                        title="Edit Course"
+                      >
+                        <FaEdit size={16} />
+                        <span>Edit Course</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleDeleteCourse(course._id)}
+                        disabled={deletingCourseId === course._id}
+                        className="flex items-center justify-center gap-2 px-4 py-3 bg-red-500/15 text-red-400 hover:bg-red-500/25 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                        title="Delete Course"
+                      >
+                        {deletingCourseId === course._id ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-b-2 border-current"/>
+                        ) : (
+                          <>
+                            <FaTrash size={16} />
+                            <span>Delete</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

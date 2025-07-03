@@ -14,7 +14,6 @@ const CourseManagement = lazy(() => import('./components/CourseManagement'));
 const CreateCourse = lazy(() => import('./components/CreateCourse/CreateCourse'));
 const EnhancedAnalytics = lazy(() => import('./components/EnhancedAnalytics'));
 const Settings = lazy(() => import('./components/Settings'));
-const CourseTypeManager = lazy(() => import('../../components/core/Dashboard/Admin/CourseTypeManager'));
 const CourseAccessRequests = lazy(() => import('../../components/core/Dashboard/Admin/CourseAccessRequests'));
 const QuizManagement = lazy(() => import('./components/QuizManagement'));
 const CourseCategories = lazy(() => import('../../components/core/Dashboard/AddCategory/CourseCategories'));
@@ -49,7 +48,6 @@ const AdminDashboard = () => {
     { id: 'users', label: 'User Management', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'courses', label: 'Course Management', icon: <FaBookOpen className="w-5 h-5" /> },
     { id: 'categories', label: 'Course Categories', icon: <FaGraduationCap className="w-5 h-5" /> },
-    { id: 'courseTypes', label: 'Course Types', icon: <FaGraduationCap className="w-5 h-5" /> },
     { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle className="w-5 h-5" /> },
     { id: 'studentProgress', label: 'Student Progress', icon: <FaChartLine className="w-5 h-5" /> },
     { id: 'accessRequests', label: 'Access Requests', icon: <FaUsers className="w-5 h-5" /> },
@@ -108,7 +106,6 @@ const AdminDashboard = () => {
                     {activeTab === 'users' && <UserManagement />}
                     {activeTab === 'courses' && <CourseManagement onCreateCourse={handleCreateCourse} />}
                     {activeTab === 'categories' && <CourseCategories />}
-                    {activeTab === 'courseTypes' && <CourseTypeManager />}
                     {activeTab === 'accessRequests' && <CourseAccessRequests />}
                     {activeTab === 'settings' && <Settings />}
                     {activeTab === 'quizzes' && <QuizManagement />}

@@ -20,56 +20,6 @@ const {
   GET_STUDENT_PROGRESS_API,
 } = adminEndpoints
 
-// ================ Set Course Type ================
-export const setCourseType = async (courseId, courseType, token) => {
-  const toastId = toast.loading("Updating course type...")
-  let result = null
-
-  try {
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
-
-    if (!courseId) {
-      throw new Error("Course ID is required")
-    }
-
-    if (!courseType) {
-      throw new Error("Course type is required")
-    }
-
-    const url = SET_COURSE_TYPE_API.replace(':courseId', courseId)
-    
-    const response = await apiConnector("PUT", url, { courseType }, {
-      Authorization: `Bearer ${token}`,
-    })
-    
-    console.log("SET_COURSE_TYPE_API RESPONSE............", response)
-
-    if (!response?.data?.success) {
-      throw new Error(response?.data?.message || "Could Not Update Course Type")
-    }
-
-    if (!response?.data?.data) {
-      throw new Error("No course data received in response")
-    }
-
-    result = response.data.data
-  } catch (error) {
-    console.error("SET_COURSE_TYPE_API ERROR:", {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
-    })
-    const errorMessage = error.response?.data?.message || error.message || "Failed to update course type"
-    toast.error(errorMessage)
-    throw error
-  } finally {
-    toast.dismiss(toastId)
-  }
-  
-  return result
-}
 
 // ================ Get All Users ================
 export const getAllUsers = async (token) => {
@@ -314,11 +264,13 @@ export const toggleUserStatus = async (userId, token) => {
 
 // ================ Get All Courses ================
 export const getAllCourses = async (token) => {
-  let result = { courses: [] }
-  const toastId = toast.loading("Loading courses...")
+  let result = []
 
   try {
-    console.log("Fetching courses with token:", token)
+    if (!token) {
+      throw new Error("No authentication token found")
+    }
+
     const response = await apiConnector("GET", GET_ALL_COURSES_API, null, {
       Authorization: `Bearer ${token}`,
     })
@@ -326,32 +278,27 @@ export const getAllCourses = async (token) => {
     console.log("GET_ALL_COURSES_API Response:", response)
     
     if (!response?.data?.success) {
-      const error = response?.data?.message || "Could Not Fetch Courses"
-      console.error("API Error:", error)
-      throw new Error(error)
+      throw new Error(response?.data?.message || "Could Not Fetch Courses")
     }
     
-    const courses = response?.data?.courses
-    if (!courses) {
-      console.error("No courses data in response")
+    if (!response?.data?.courses) {
       throw new Error("No courses data received")
     }
     
-    result = { courses }
-    console.log("Fetched courses:", courses)
+    result = response.data.courses
+    console.log("Fetched courses:", result.length)
   } catch (error) {
     console.error("GET_ALL_COURSES_API ERROR:", {
       message: error.message,
       response: error.response?.data,
       status: error.response?.status
     })
-    toast.error(error.response?.data?.message || error.message)
-    throw error // Re-throw to handle in component
-  } finally {
-    toast.dismiss(toastId)
+    const errorMessage = error.response?.data?.message || error.message || "Failed to fetch courses"
+    toast.error(errorMessage)
+    throw error
   }
   
-  return result
+  return { courses: result }
 }
 
 // ================ Approve Course ================
@@ -565,7 +512,7 @@ export const createCourseAsAdmin = async (formData, token) => {
       throw new Error("No course data received in response")
     }
 
-    
+    toast.success("Course created successfully")
     result = response.data.course
   } catch (error) {
     console.error("CREATE_COURSE_AS_ADMIN_API ERROR:", {
@@ -687,5 +634,56 @@ export const getStudentProgress = async (courseId, studentId, token) => {
   }
   
   toast.dismiss(toastId)
+  return result
+}
+
+// ================ Set Course Type ================
+export const setCourseType = async (courseId, courseType, token) => {
+  const toastId = toast.loading("Updating course type...")
+  let result = null
+
+  try {
+    if (!token) {
+      throw new Error("No authentication token found")
+    }
+
+    if (!courseId) {
+      throw new Error("Course ID is required")
+    }
+
+    if (!courseType) {
+      throw new Error("Course type is required")
+    }
+
+    const url = SET_COURSE_TYPE_API.replace(':courseId', courseId)
+    
+    const response = await apiConnector("PUT", url, { courseType }, {
+      Authorization: `Bearer ${token}`,
+    })
+    
+    console.log("SET_COURSE_TYPE_API RESPONSE............", response)
+
+    if (!response?.data?.success) {
+      throw new Error(response?.data?.message || "Could Not Update Course Type")
+    }
+
+    if (!response?.data?.data) {
+      throw new Error("No course data received in response")
+    }
+
+    result = response.data.data
+  } catch (error) {
+    console.error("SET_COURSE_TYPE_API ERROR:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
+    const errorMessage = error.response?.data?.message || error.message || "Failed to update course type"
+    toast.error(errorMessage)
+    throw error
+  } finally {
+    toast.dismiss(toastId)
+  }
+  
   return result
 }

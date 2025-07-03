@@ -81,7 +81,7 @@ export default function RenderTotalAmount() {
 
       <IconBtn
         text="Buy Now"
-        onclick={handleBuyCourse}
+        onClick={handleBuyCourse}
         customClasses="w-full justify-center"
       />
     </div>

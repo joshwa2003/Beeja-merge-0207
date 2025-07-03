@@ -27,7 +27,7 @@ export default function CertificateModal({ onClose, certificateData }) {
     <div className="fixed inset-0 z-[1000] !mt-0 grid h-screen w-screen place-items-center overflow-auto bg-white bg-opacity-10 backdrop-blur-sm">
       <div className="min-h-[80vh] w-11/12 max-w-[1200px] rounded-lg border border-richblack-400 bg-richblack-800 p-6">
         <div className="flex items-center justify-between">
-          <p className="text-xl font-semibold text-richblack-5">Internship Certificate</p>
+          <p className="text-xl font-semibold text-richblack-5">Course Certificate</p>
           <button
             onClick={onClose}
             className="text-richblack-5 hover:text-richblack-50"
@@ -43,7 +43,7 @@ export default function CertificateModal({ onClose, certificateData }) {
           
           <div className="mt-4">
             <IconBtn
-              text="Download Internship Certificate"
+              text="Download Course Certificate"
               onClick={handleDownload}
             />
           </div>

@@ -239,6 +239,7 @@ export default function SubSectionModal({ modalData, setModalData, add = false, 
               <IconBtn
                 disabled={loading}
                 text={loading ? "Loading.." : edit ? "Save Changes" : "Save"}
+                type="submit"
               />
             </div>
           )}

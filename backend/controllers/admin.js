@@ -368,6 +368,36 @@ exports.getAllCourses = async (req, res) => {
     }
 };
 
+// ================ GET COURSES FOR TYPE MANAGEMENT (OPTIMIZED) ================
+exports.getCoursesForTypeManagement = async (req, res) => {
+    try {
+        console.log('Fetching courses for type management (optimized)...');
+        
+        // Only fetch essential fields for course type management
+        const courses = await Course.find({})
+            .select('courseName thumbnail price originalPrice courseType adminSetFree createdAt instructor category')
+            .populate('instructor', 'firstName lastName email image')
+            .populate('category', 'name')
+            .sort({ createdAt: -1 })
+            .lean(); // Use lean() for better performance
+
+        console.log('Courses fetched for type management:', courses.length);
+
+        return res.status(200).json({
+            success: true,
+            courses,
+            message: 'Courses fetched successfully for type management'
+        });
+    } catch (error) {
+        console.error('Error fetching courses for type management:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching courses for type management',
+            error: error.message
+        });
+    }
+};
+
 // ================ APPROVE COURSE ================
 exports.approveCourse = async (req, res) => {
     try {
@@ -486,12 +516,13 @@ exports.deleteCourse = async (req, res) => {
     }
 };
 
-// ================ SET COURSE TYPE (ADMIN) ================
+// ================ SET COURSE TYPE ================
 exports.setCourseType = async (req, res) => {
     try {
         const { courseId } = req.params;
         const { courseType } = req.body; // 'Paid' or 'Free'
 
+        // Validate course type
         if (!['Paid', 'Free'].includes(courseType)) {
             return res.status(400).json({
                 success: false,
@@ -499,35 +530,35 @@ exports.setCourseType = async (req, res) => {
             });
         }
 
-        const course = await Course.findById(courseId);
-        if (!course) {
+        // First, get the current course to preserve the original price
+        const currentCourse = await Course.findById(courseId);
+        if (!currentCourse) {
             return res.status(404).json({
                 success: false,
                 message: 'Course not found'
             });
         }
 
-        // Store original price if setting to free for the first time
-        if (courseType === 'Free' && !course.originalPrice) {
-            course.originalPrice = course.price;
-        }
+        let updateData = {
+            courseType,
+            adminSetFree: courseType === 'Free'
+        };
 
-        // Update course type and admin settings
-        course.courseType = courseType;
-        course.adminSetFree = courseType === 'Free';
 
-        // Set price based on course type
-        if (courseType === 'Free') {
-            course.price = 0;
-        } else if (courseType === 'Paid' && course.originalPrice) {
-            course.price = course.originalPrice;
-        }
 
-        await course.save();
-
-        const updatedCourse = await Course.findById(courseId)
-            .populate('instructor', 'firstName lastName email')
-            .populate('category', 'name');
+        // Update the course
+        const updatedCourse = await Course.findByIdAndUpdate(
+            courseId,
+            { $set: updateData },
+            { 
+                new: true, // Return updated document
+                select: 'courseName thumbnail price originalPrice courseType adminSetFree createdAt instructor category', // Only return needed fields
+                populate: [
+                    { path: 'instructor', select: 'firstName lastName email image' },
+                    { path: 'category', select: 'name' }
+                ]
+            }
+        );
 
         return res.status(200).json({
             success: true,
@@ -544,6 +575,7 @@ exports.setCourseType = async (req, res) => {
         });
     }
 };
+
 
 // ================ GET ANALYTICS DATA ================
 exports.getAnalytics = async (req, res) => {

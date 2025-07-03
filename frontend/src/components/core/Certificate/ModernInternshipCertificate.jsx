@@ -88,7 +88,7 @@ export default function ModernInternshipCertificate({ certificateData }) {
         {/* Certificate Content */}
         <div className="text-center space-y-4 mb-12 max-w-4xl mx-auto">
           <p className="text-lg text-gray-700 leading-relaxed">
-            has successfully completed <span className="font-bold text-blue-600">4 weeks</span> of a virtual internship program in
+            has successfully completed <span className="font-bold text-blue-600">4 weeks</span> of a virtual Course program in
           </p>
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 my-4">
             <h4 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
@@ -102,7 +102,7 @@ export default function ModernInternshipCertificate({ certificateData }) {
           </p>
           <p className="text-base text-gray-600 leading-relaxed italic">
             "We were truly amazed by his/her showcased skills and invaluable contributions to
-            the tasks and projects throughout the internship."
+            the tasks and projects throughout the Course."
           </p>
         </div>
 

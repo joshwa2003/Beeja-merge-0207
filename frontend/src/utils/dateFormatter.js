@@ -1,87 +1,43 @@
-export const formatDateShort = (dateString) => {
-  if (!dateString) return 'Not available';
-  
-  const date = new Date(dateString);
-  
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
-    return 'Invalid date';
-  }
-  
-  const options = { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
-  };
-  
-  return date.toLocaleDateString('en-US', options);
-};
-
 export const formatDate = (dateString) => {
-  if (!dateString) return 'Not available';
+  if (!dateString) return 'N/A'
   
-  const date = new Date(dateString);
+  const date = new Date(dateString)
   
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
-    return 'Invalid date';
-  }
+  if (isNaN(date.getTime())) return 'Invalid Date'
   
-  const options = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  };
-  
-  return date.toLocaleDateString('en-US', options);
-};
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
 
-export const formatDateAndTime = (dateString) => {
-  if (!dateString) return 'Not available';
+export const formatDateShort = (dateString) => {
+  if (!dateString) return 'N/A'
   
-  const date = new Date(dateString);
+  const date = new Date(dateString)
   
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
-    return 'Invalid date';
-  }
+  if (isNaN(date.getTime())) return 'Invalid Date'
   
-  const options = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  };
-  
-  return date.toLocaleDateString('en-US', options);
-};
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  })
+}
 
-export const getTimeAgo = (dateString) => {
-  if (!dateString) return 'Not available';
+export const getRelativeTime = (dateString) => {
+  if (!dateString) return 'N/A'
   
-  const date = new Date(dateString);
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInMs = now - date
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
   
-  // Check if the date is valid
-  if (isNaN(date.getTime())) {
-    return 'Invalid date';
-  }
+  if (diffInDays === 0) return 'Today'
+  if (diffInDays === 1) return 'Yesterday'
+  if (diffInDays < 7) return `${diffInDays} days ago`
+  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`
+  if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`
   
-  const now = new Date();
-  const seconds = Math.floor((now - date) / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-  const months = Math.floor(days / 30);
-  const years = Math.floor(months / 12);
-
-  if (years > 0) return `${years} year${years > 1 ? 's' : ''} ago`;
-  if (months > 0) return `${months} month${months > 1 ? 's' : ''} ago`;
-  if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
-  if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-  return 'Just now';
-};
-
-// Alias for backward compatibility
-export const getRelativeTime = getTimeAgo;
+  return `${Math.floor(diffInDays / 365)} years ago`
+}

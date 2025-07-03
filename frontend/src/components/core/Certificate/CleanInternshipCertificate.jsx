@@ -85,13 +85,13 @@ export default function CleanInternshipCertificate({ certificateData }) {
           {/* Has Earned Section */}
           <div className="text-center space-y-2">
             <p className="text-xl italic" style={{ fontFamily: 'cursive' }}>has earned</p>
-            <p className="text-lg font-bold">Internship Completion Certificate</p>
+            <p className="text-lg font-bold">Course Completion Certificate</p>
           </div>
 
           {/* Course Title Section */}
           <div className="text-center space-y-2">
             <p className="text-lg italic" style={{ fontFamily: 'cursive' }}>
-              while completing the internship program entitled
+              while completing the Course program entitled
             </p>
           </div>
 

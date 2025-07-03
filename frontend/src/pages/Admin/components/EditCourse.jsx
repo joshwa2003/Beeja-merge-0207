@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { HiOutlineCurrencyRupee } from "react-icons/hi";
+import { FaInfoCircle, FaTools } from "react-icons/fa";
 import { showAllCategories } from "../../../services/operations/categoryAPI";
 import { getAllInstructors } from "../../../services/operations/adminAPI";
 import { editCourseDetails } from "../../../services/operations/courseDetailsAPI";
@@ -122,27 +123,29 @@ export default function EditCourse({ course, onCancel, onSave }) {
         </button>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex space-x-1 bg-richblack-700 p-1 rounded-lg">
+      {/* Tab Navigation - Improved for mobile */}
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-1 bg-richblack-700 p-2 rounded-lg">
         <button
           onClick={() => setActiveTab('information')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`py-3 sm:py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'information'
               ? 'bg-yellow-50 text-richblack-900'
               : 'text-richblack-5 hover:text-yellow-50'
-          }`}
+          } flex-1 flex items-center justify-center gap-2`}
         >
-          Course Information
+          <FaInfoCircle className="text-base" />
+          <span>Course Information</span>
         </button>
         <button
           onClick={() => setActiveTab('builder')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`py-3 sm:py-2 px-4 rounded-md text-sm font-medium transition-colors ${
             activeTab === 'builder'
               ? 'bg-yellow-50 text-richblack-900'
               : 'text-richblack-5 hover:text-yellow-50'
-          }`}
+          } flex-1 flex items-center justify-center gap-2`}
         >
-          Course Builder
+          <FaTools className="text-base" />
+          <span>Course Builder</span>
         </button>
       </div>
 
@@ -312,23 +315,30 @@ export default function EditCourse({ course, onCancel, onSave }) {
           )}
         </div>
 
-          {/* Submit Button */}
-          <div className="flex gap-4">
+          {/* Submit Button - Improved for mobile */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
               type="button"
               onClick={onCancel}
-              className="flex items-center justify-center rounded-md bg-richblack-600 px-6 py-3 text-richblack-5 font-semibold hover:bg-richblack-700 transition-all duration-200"
+              className="flex items-center justify-center rounded-lg bg-richblack-600 px-6 py-3.5 text-richblack-5 font-semibold hover:bg-richblack-700 transition-all duration-200 w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className={`flex items-center justify-center rounded-md bg-yellow-50 px-6 py-3 text-richblack-900 font-semibold flex-1 ${
-                loading ? "cursor-not-allowed opacity-50" : "hover:scale-95"
+              className={`flex items-center justify-center rounded-lg bg-yellow-50 px-6 py-3.5 text-richblack-900 font-semibold w-full sm:flex-1 ${
+                loading ? "cursor-not-allowed opacity-50" : "hover:scale-[0.98] active:scale-95"
               } transition-all duration-200`}
             >
-              {loading ? "Updating Course..." : "Update Course"}
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-t-2 border-richblack-900 rounded-full animate-spin mr-2"></div>
+                  Updating Course...
+                </>
+              ) : (
+                "Update Course"
+              )}
             </button>
           </div>
         </form>

@@ -75,7 +75,7 @@ export default function InternshipCertificate({ certificateData }) {
         {/* Certificate Content */}
         <div className="text-center mb-8 max-w-4xl mx-auto">
           <p className="text-lg text-gray-700 leading-relaxed">
-            has successfully completed <span className="font-semibold">4 weeks</span> of a virtual internship program in
+            has successfully completed <span className="font-semibold">4 weeks</span> of a virtual Course program in
           </p>
           <h4 className="text-2xl font-bold text-gray-800 my-3">
             {certificateData?.courseName || 'Web Development'}
@@ -87,7 +87,7 @@ export default function InternshipCertificate({ certificateData }) {
           </p>
           <p className="text-lg text-gray-700 leading-relaxed mt-4">
             We were truly amazed by his/her showcased skills and invaluable contributions to
-            the tasks and projects throughout the internship.
+            the tasks and projects throughout the Course.
           </p>
         </div>
 

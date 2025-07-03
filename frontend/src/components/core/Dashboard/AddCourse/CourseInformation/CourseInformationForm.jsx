@@ -131,11 +131,10 @@ export default function CourseInformationForm() {
         setLoading(true)
         const result = await editCourseDetails(formData, token)
         setLoading(false)
-        if (result) {
-          toast.success("Course updated successfully")
-          dispatch(setStep(2))
-          dispatch(setCourse(result))
-        }
+      if (result) {
+        dispatch(setStep(2))
+        dispatch(setCourse(result))
+      }
       } else {
         toast.error("No changes made to the form")
       }
@@ -187,7 +186,6 @@ export default function CourseInformationForm() {
       }
       
       if (result) {
-        toast.success("Course created successfully")
         // Continue to next step for both admin and instructor
         dispatch(setStep(2))
         dispatch(setCourse(result))
@@ -388,6 +386,7 @@ export default function CourseInformationForm() {
         <IconBtn
           disabled={loading}
           text={!editCourse ? "Next" : "Save Changes"}
+          type="submit"
         >
           <MdNavigateNext />
         </IconBtn>
