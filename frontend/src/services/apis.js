@@ -215,3 +215,32 @@ export const chatEndpoints = {
   GET_CHAT_MESSAGES_API: BASE_URL + "/api/v1/chat/messages",
   GET_CHAT_DETAILS_API: BASE_URL + "/api/v1/chat/details",
 }
+
+// JOB ENDPOINTS
+export const jobsEndpoints = {
+  // Public endpoints
+  GET_PUBLISHED_JOBS_API: BASE_URL + "/api/v1/jobs/published",
+  GET_JOB_DETAILS_API: BASE_URL + "/api/v1/jobs/details/:jobId",
+  
+  // Admin job management endpoints
+  CREATE_JOB_API: BASE_URL + "/api/v1/jobs/create",
+  GET_ALL_JOBS_API: BASE_URL + "/api/v1/jobs/all",
+  UPDATE_JOB_API: BASE_URL + "/api/v1/jobs/update/:jobId",
+  DELETE_JOB_API: BASE_URL + "/api/v1/jobs/delete/:jobId",
+  TOGGLE_JOB_PUBLICATION_API: BASE_URL + "/api/v1/jobs/toggle-publication/:jobId",
+  GET_JOBS_ANALYTICS_API: BASE_URL + "/api/v1/jobs/analytics",
+  
+  // Application management endpoints (Admin)
+  GET_JOB_APPLICATIONS_API: BASE_URL + "/api/v1/jobs/applications/:jobId",
+  GET_ALL_APPLICATIONS_API: BASE_URL + "/api/v1/jobs/applications",
+  UPDATE_APPLICATION_STATUS_API: BASE_URL + "/api/v1/jobs/application/:applicationId/status",
+  
+  // Job application endpoints (Public)
+  SUBMIT_APPLICATION_API: BASE_URL + "/api/v1/job-applications/submit",
+  GET_APPLICATION_BY_ID_API: BASE_URL + "/api/v1/job-applications/:applicationId",
+  DELETE_APPLICATION_API: BASE_URL + "/api/v1/job-applications/:applicationId",
+  BULK_UPDATE_APPLICATION_STATUS_API: BASE_URL + "/api/v1/job-applications/bulk-update",
+  GET_APPLICATION_STATISTICS_API: BASE_URL + "/api/v1/job-applications/statistics/:jobId?",
+  GET_APPLICATIONS_BY_EMAIL_API: BASE_URL + "/api/v1/job-applications/email/:email",
+  DOWNLOAD_RESUME_API: BASE_URL + "/api/v1/job-applications/download/:applicationId",
+}

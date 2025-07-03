@@ -441,6 +441,68 @@ body {
   background: #1a1a1a;
 }
 
+/* Job Cards Section Styles */
+.jobs-section {
+  position: relative;
+  z-index: 10;
+}
+
+.job-card {
+  background-color: #2C333F;
+  border: 2px solid #4B5563;
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 20;
+  min-height: 300px;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.job-card-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.job-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #374151;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: #E5E7EB;
+  font-size: 14px;
+  margin-right: 16px;
+  margin-bottom: 8px;
+}
+
+.job-card-button {
+  background-color: #FEF3C7;
+  color: #1F2937;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.job-card-button:hover {
+  background-color: #FDE68A;
+  transform: scale(1.05);
+}
+
 .sidebar-item {
   transition: background-color 0.2s ease;
   position: relative;

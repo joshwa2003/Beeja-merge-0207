@@ -26,7 +26,7 @@ import Faqs from "./pages/Faqs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Support from "./pages/Support";
 import Courses from "./pages/Courses";
-import Careers from "./pages/Careers";
+import FinalDynamicCareers from "./pages/FinalDynamicCareers";
 import Resources from "./pages/Resources";
 import Testimonials from "./pages/Testimonials";
 import Partnership from "./pages/Partnership";
@@ -137,7 +137,7 @@ function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/support" element={<Support />} />
         <Route path="/courses" element={<Courses />} />
-        <Route path="/careers" element={<Careers />} />
+        <Route path="/careers" element={<FinalDynamicCareers />} />
         <Route path="/resources" element={<Resources />} />
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/partnership" element={<Partnership />} />

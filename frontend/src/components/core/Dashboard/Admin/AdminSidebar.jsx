@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux';
-import { FaUsers, FaBookOpen, FaChartBar, FaGraduationCap, FaQuestionCircle, FaStar, FaComments, FaTag, FaChartLine, FaCommentDots } from 'react-icons/fa';
+import { FaUsers, FaBookOpen, FaChartBar, FaGraduationCap, FaQuestionCircle, FaStar, FaComments, FaTag, FaChartLine, FaCommentDots, FaBriefcase, FaEnvelope } from 'react-icons/fa';
 import { MdSettings, MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
 import { FiBell } from 'react-icons/fi';
 import { VscSignOut, VscPackage, VscGitPullRequestCreate, VscSymbolClass } from "react-icons/vsc";
@@ -21,21 +21,22 @@ const AdminSidebar = ({ activeTab, onTabChange }) => {
 
   // Sidebar navigation items
   const sidebarItems = [
+    { id: 'analytics', label: 'Analytics', icon: <FaChartBar size={16} /> },
     { id: 'users', label: 'Users', icon: <FaUsers size={16} /> },
     { id: 'courses', label: 'Courses', icon: <FaBookOpen size={16} /> },
     { id: 'categories', label: 'Course Categories', icon: <VscSymbolClass size={16} /> },
-    { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle size={16} /> },
     { id: 'studentProgress', label: 'Student Progress', icon: <FaChartLine size={16} /> },
+    { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle size={16} /> },
+    { id: 'featuredCourses', label: 'Featured Courses', icon: <FaStar size={16} /> },
     { id: 'accessRequests', label: 'Access Requests', icon: <FaUsers size={16} /> },
     { id: 'bundleRequests', label: 'Bundle Requests', icon: <VscGitPullRequestCreate size={16} /> },
     { id: 'orders', label: 'Orders', icon: <VscPackage size={16} /> },
     { id: 'coupons', label: 'Coupons', icon: <FaTag size={16} /> },
+    { id: 'careers', label: 'Careers', icon: <FaBriefcase size={16} /> },
     { id: 'notifications', label: 'Notifications', icon: <FiBell size={16} /> },
-    { id: 'contactMessages', label: 'Contact Messages', icon: <FiBell size={16} /> },
-    { id: 'featuredCourses', label: 'Featured Courses', icon: <FaStar size={16} /> },
+    { id: 'contactMessages', label: 'Contact Messages', icon: <FaEnvelope size={16} /> },
     { id: 'faqs', label: 'FAQ Management', icon: <FaComments size={16} /> },
     { id: 'chats', label: 'Manage Chats', icon: <FaCommentDots size={16} /> },
-    { id: 'analytics', label: 'Analytics', icon: <FaChartBar size={16} /> },
   ];
 
   useEffect(() => {

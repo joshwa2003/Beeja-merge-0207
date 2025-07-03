@@ -25,6 +25,7 @@ const FeaturedCoursesManagement = lazy(() => import('./components/FeaturedCourse
 const ContactMessages = lazy(() => import('../../components/core/Dashboard/Admin/ContactMessages'));
 const FaqManagement = lazy(() => import('./components/FaqManagement'));
 const AdminChats = lazy(() => import('../Dashboard/AdminChats'));
+const CareersManagement = lazy(() => import('./components/CareersManagement'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -42,24 +43,24 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics');
   const [showCreateCourse, setShowCreateCourse] = useState(false);
 
-  // Sidebar navigation items for title display (removed duplicates)
+  // Sidebar navigation items for title display (matching AdminSidebar order)
   const sidebarItems = [
     { id: 'analytics', label: 'Analytics Dashboard', icon: <FaChartBar className="w-5 h-5" /> },
     { id: 'users', label: 'User Management', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'courses', label: 'Course Management', icon: <FaBookOpen className="w-5 h-5" /> },
     { id: 'categories', label: 'Course Categories', icon: <FaGraduationCap className="w-5 h-5" /> },
-    { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle className="w-5 h-5" /> },
     { id: 'studentProgress', label: 'Student Progress', icon: <FaChartLine className="w-5 h-5" /> },
+    { id: 'quizzes', label: 'Quiz Management', icon: <FaQuestionCircle className="w-5 h-5" /> },
+    { id: 'featuredCourses', label: 'Featured Courses Management', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'accessRequests', label: 'Access Requests', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'bundleRequests', label: 'Bundle Requests', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'orders', label: 'Orders', icon: <VscPackage className="w-5 h-5" /> },
     { id: 'coupons', label: 'Coupons', icon: <FaTag className="w-5 h-5" /> },
+    { id: 'careers', label: 'Careers', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'notifications', label: 'Notification Management', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'contactMessages', label: 'Contact Messages', icon: <FaUsers className="w-5 h-5" /> },
-    { id: 'featuredCourses', label: 'Featured Courses Management', icon: <FaUsers className="w-5 h-5" /> },
     { id: 'faqs', label: 'FAQ Management', icon: <FaQuestionCircle className="w-5 h-5" /> },
     { id: 'chats', label: 'Manage Chats', icon: <FaUsers className="w-5 h-5" /> },
-    { id: 'settings', label: 'Settings', icon: <MdSettings className="w-5 h-5" /> },
   ];
 
   const handleTabChange = (tabId) => {
@@ -118,6 +119,7 @@ const AdminDashboard = () => {
                     {activeTab === 'featuredCourses' && <FeaturedCoursesManagement />}
                     {activeTab === 'faqs' && <FaqManagement />}
                     {activeTab === 'chats' && <AdminChats />}
+                    {activeTab === 'careers' && <CareersManagement />}
                   </>
                 )}
               </Suspense>
