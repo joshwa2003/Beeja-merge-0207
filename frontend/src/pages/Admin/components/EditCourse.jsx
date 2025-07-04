@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
@@ -20,12 +20,6 @@ export default function EditCourse({ course, onCancel, onSave }) {
   const [instructors, setInstructors] = useState([]);
   const [activeTab, setActiveTab] = useState('information');
   const [currentCourse, setCurrentCourse] = useState(course);
-  
-  // Refs for form fields to scroll to on validation error
-  const fieldRefs = useRef({});
-  
-  // State to track validation errors for visual indicators
-  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     const getCategories = async () => {
@@ -60,31 +54,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
     getInstructors();
   }, [course, setValue, token]);
 
-  const onSubmit = async (data, e) => {
-    // Clear previous validation errors
-    setValidationErrors({});
-
-    // Check if there are any validation errors
-    if (Object.keys(errors).length > 0) {
-      // Set validation errors for visual indicators
-      const newValidationErrors = {};
-      Object.keys(errors).forEach(field => {
-        newValidationErrors[field] = errors[field].message;
-      });
-      setValidationErrors(newValidationErrors);
-
-      // Find the first field with an error
-      const firstErrorField = Object.keys(errors)[0];
-      // Scroll to the field
-      if (fieldRefs.current[firstErrorField]) {
-        fieldRefs.current[firstErrorField].scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-      }
-      return;
-    }
-
+  const onSubmit = async (data) => {
     setLoading(true);
     
     try {
@@ -204,12 +174,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
       {activeTab === 'information' ? (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Course Title */}
-        <div 
-          className={`flex flex-col space-y-2 ${
-            validationErrors.courseTitle ? 'p-3 border border-red-500 rounded-lg bg-red-900/10' : ''
-          }`}
-          ref={el => fieldRefs.current['courseTitle'] = el}
-        >
+        <div className="flex flex-col space-y-2">
           <label className="text-sm text-richblack-5" htmlFor="courseTitle">
             Course Title <sup className="text-pink-200">*</sup>
           </label>
@@ -217,22 +182,17 @@ export default function EditCourse({ course, onCancel, onSave }) {
             id="courseTitle"
             placeholder="Enter Course Title"
             {...register("courseTitle", { required: "Course title is required" })}
-            className={`form-style w-full ${
-              validationErrors.courseTitle ? 'border-red-500 focus:border-red-400' : ''
-            }`}
+            className="form-style w-full"
           />
           {errors.courseTitle && (
-            <span className="ml-2 text-xs tracking-wide text-red-400">
+            <span className="ml-2 text-xs tracking-wide text-pink-200">
               {errors.courseTitle.message}
             </span>
           )}
         </div>
 
         {/* Course Short Description */}
-        <div 
-          className="flex flex-col space-y-2"
-          ref={el => fieldRefs.current['courseShortDesc'] = el}
-        >
+        <div className="flex flex-col space-y-2">
           <label className="text-sm text-richblack-5" htmlFor="courseShortDesc">
             Course Short Description <sup className="text-pink-200">*</sup>
           </label>
@@ -250,10 +210,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
         </div>
 
         {/* Course Price */}
-        <div 
-          className="flex flex-col space-y-2"
-          ref={el => fieldRefs.current['coursePrice'] = el}
-        >
+        <div className="flex flex-col space-y-2">
           <label className="text-sm text-richblack-5" htmlFor="coursePrice">
             Course Price <sup className="text-pink-200">*</sup>
           </label>
@@ -281,10 +238,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
         </div>
 
         {/* Course Category */}
-        <div 
-          className="flex flex-col space-y-2"
-          ref={el => fieldRefs.current['courseCategory'] = el}
-        >
+        <div className="flex flex-col space-y-2">
           <label className="text-sm text-richblack-5" htmlFor="courseCategory">
             Course Category <sup className="text-pink-200">*</sup>
           </label>
@@ -317,7 +271,6 @@ export default function EditCourse({ course, onCancel, onSave }) {
           register={register}
           errors={errors}
           setValue={setValue}
-          initialData={course?.tag || []}
         />
 
         {/* Course Thumbnail Image */}
@@ -331,10 +284,7 @@ export default function EditCourse({ course, onCancel, onSave }) {
         />
 
         {/* Benefits of the course */}
-        <div 
-          className="flex flex-col space-y-2"
-          ref={el => fieldRefs.current['courseBenefits'] = el}
-        >
+        <div className="flex flex-col space-y-2">
           <label className="text-sm text-richblack-5" htmlFor="courseBenefits">
             Benefits of the course <sup className="text-pink-200">*</sup>
           </label>
@@ -352,22 +302,16 @@ export default function EditCourse({ course, onCancel, onSave }) {
         </div>
 
         {/* Requirements/Instructions */}
-        <div ref={el => fieldRefs.current['courseRequirements'] = el}>
-          <RequirementsField
-            name="courseRequirements"
-            label="Requirements/Instructions"
-            register={register}
-            setValue={setValue}
-            errors={errors}
-            initialData={course?.instructions || []}
-          />
-        </div>
+        <RequirementsField
+          name="courseRequirements"
+          label="Requirements/Instructions"
+          register={register}
+          setValue={setValue}
+          errors={errors}
+        />
 
         {/* Select Instructor */}
-        <div 
-          className="flex flex-col space-y-2"
-          ref={el => fieldRefs.current['instructorId'] = el}
-        >
+        <div className="flex flex-col space-y-2">
           <label className="text-sm text-richblack-5" htmlFor="instructorId">
             Select Instructor <sup className="text-pink-200">*</sup>
           </label>

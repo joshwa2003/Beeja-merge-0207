@@ -127,43 +127,15 @@ export default function EnrolledCourses() {
         {enrolledCourses?.map((course, i) => (
           <div
             key={i}
-            className={`group bg-slate-800/50 backdrop-blur-xl rounded-2xl border transition-all duration-300 ${
-              course.isActive === false 
-                ? 'border-red-500/30 bg-red-900/10' 
-                : 'border-slate-700/50 hover:border-purple-500/30'
-            }`}
+            className="group bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 hover:border-purple-500/30 transition-all duration-300"
           >
             <div className="p-6">
-              {/* Deactivation Message */}
-              {course.isActive === false && (
-                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <div className="flex items-center gap-2 text-red-400">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <span className="text-sm font-medium">Course Deactivated</span>
-                  </div>
-                  <p className="text-sm text-red-300 mt-1">
-                    This course has been deactivated by the admin. Please contact the administrator for further information.
-                  </p>
-                </div>
-              )}
-
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Thumbnail */}
                 <div 
-                  className={`relative ${course.isActive !== false ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
-                  onClick={() => {
-                    if (course.isActive !== false) {
-                      navigate(`/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`)
-                    }
-                  }}
+                  className="relative cursor-pointer"
+                  onClick={() => handleCourseNavigation(course)}
                 >
-                  <div className={`absolute -inset-1 bg-gradient-to-r rounded-2xl blur transition duration-500 ${
-                    course.isActive !== false 
-                      ? 'from-purple-600 to-blue-600 opacity-20 group-hover:opacity-40' 
-                      : 'from-red-600 to-red-800 opacity-10'
-                  }`}></div>
                   <div className="relative">
                     <Img
                       src={course.thumbnail}
@@ -172,29 +144,14 @@ export default function EnrolledCourses() {
                       width={80}
                       height={80}
                     />
-                    {course.isActive === false && (
-                      <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
-                        <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                        </svg>
-                      </div>
-                    )}
                   </div>
                 </div>
 
                 {/* Course Info */}
                 <div className="flex-1 min-w-0">
                   <h3 
-                    className={`text-lg font-semibold mb-2 transition-colors duration-300 ${
-                      course.isActive !== false 
-                        ? 'text-white cursor-pointer hover:text-purple-400' 
-                        : 'text-slate-400 cursor-not-allowed'
-                    }`}
-                    onClick={() => {
-                      if (course.isActive !== false) {
-                        navigate(`/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`)
-                      }
-                    }}
+                    className="text-lg font-semibold text-white mb-2 cursor-pointer hover:text-purple-400 transition-colors duration-200"
+                    onClick={() => handleCourseNavigation(course)}
                   >
                     {course.courseName}
                   </h3>
@@ -211,9 +168,7 @@ export default function EnrolledCourses() {
                         </svg>
                         <span className="text-sm">{course?.totalDuration}</span>
                       </div>
-                      <span className={`text-sm font-medium ${
-                        course.isActive !== false ? 'text-purple-400' : 'text-slate-500'
-                      }`}>
+                      <span className="text-sm font-medium text-purple-400">
                         {course.progressPercentage || 0}% Complete
                       </span>
                     </div>
@@ -221,7 +176,7 @@ export default function EnrolledCourses() {
                       completed={course.progressPercentage || 0}
                       height="8px"
                       isLabelVisible={false}
-                      bgColor={course.isActive !== false ? "linear-gradient(90deg, #8B5CF6, #3B82F6)" : "#6B7280"}
+                      bgColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
                       baseBgColor="#1F2937"
                       className="rounded-full"
                     />
@@ -229,50 +184,22 @@ export default function EnrolledCourses() {
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4">
-                    {course.isActive !== false ? (
-                      <>
-                        <button
-                          onClick={() => navigate(`/view-course/${course?._id}/section/${course.courseContent?.[0]?._id}/sub-section/${course.courseContent?.[0]?.subSection?.[0]?._id}`)}
-                          className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-all duration-300 text-sm font-medium"
-                        >
-                          Continue Learning
-                        </button>
-                        
-                        {course.progressPercentage === 100 && (
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation()
-                              try {
-                                const certificateData = await generateCertificate(
-                                  { courseId: course._id },
-                                  token
-                                )
-                                if (certificateData) {
-                                  setSelectedCourse({
-                                    courseName: course.courseName,
-                                    studentName: `${user?.firstName} ${user?.lastName}`,
-                                    email: user?.email,
-                                    completionDate: certificateData.completionDate || new Date().toISOString(),
-                                    certificateId: certificateData.certificateId
-                                  })
-                                  setShowCertificate(true)
-                                }
-                              } catch (error) {
-                                console.error("Error generating certificate:", error)
-                              }
-                            }}
-                            className="px-4 py-2 bg-green-500/10 text-green-400 rounded-xl hover:bg-green-500/20 transition-all duration-300 text-sm font-medium"
-                          >
-                            View Certificate
-                          </button>
-                        )}
-                      </>
-                    ) : (
+                    <button
+                      onClick={() => handleCourseNavigation(course)}
+                      className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-colors duration-200 text-sm font-medium"
+                    >
+                      Continue Learning
+                    </button>
+                    
+                    {course.progressPercentage === 100 && (
                       <button
-                        disabled
-                        className="px-4 py-2 bg-slate-600/20 text-slate-500 rounded-xl cursor-not-allowed text-sm font-medium"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCertificateGeneration(course)
+                        }}
+                        className="px-4 py-2 bg-green-500/10 text-green-400 rounded-xl hover:bg-green-500/20 transition-colors duration-200 text-sm font-medium"
                       >
-                        Course Unavailable
+                        View Certificate
                       </button>
                     )}
                   </div>

@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { getAllCoupons, toggleCouponStatus } from '../../../services/operations/couponAPI';
 import { toast } from 'react-hot-toast';
 import CouponDetailsModal from '../../../components/common/CouponDetailsModal';
-import { FiTag, FiCalendar, FiUsers, FiDollarSign, FiClock, FiEye, FiSearch, FiX, FiShare2, FiCopy } from 'react-icons/fi';
+import { FiTag, FiCalendar, FiUsers, FiDollarSign, FiClock, FiEye, FiSearch, FiX } from 'react-icons/fi';
 
 export default function CouponList() {
   const { token } = useSelector((state) => state.auth);
@@ -14,117 +14,10 @@ export default function CouponList() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [showShareMenu, setShowShareMenu] = useState(null);
-
-  // Admin configurable share options
-  const [enabledShareOptions] = useState([
-    'copy',
-    'native'
-  ]);
-
-  const generateCouponShareContent = (coupon) => {
-    const websiteUrl = window.location.origin;
-    const expiryDate = new Date(coupon.expiryDate).toLocaleDateString('en-IN', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    return `🎉 Special Discount Coupon! 🎉
-
-💳 Coupon Code: ${coupon.code}
-💰 Discount: ${coupon.discountType === 'percentage' 
-      ? `${coupon.discountValue}% OFF` 
-      : `₹${coupon.discountValue} OFF`}
-🔗 Valid For: ${coupon.linkedTo === 'course' ? 'Individual Courses' : 'Bundle Courses'}
-⏰ Valid Until: ${expiryDate}
-${coupon.minimumOrderAmount > 0 ? `🛒 Minimum Order: ₹${coupon.minimumOrderAmount}` : ''}
-
-🌐 Visit: ${websiteUrl}
-
-Don't miss out on this amazing offer! 🚀`;
-  };
-
-  const handleShare = async (coupon, method) => {
-    const shareContent = generateCouponShareContent(coupon);
-    const websiteUrl = window.location.origin;
-
-    try {
-      switch (method) {
-        case 'copy':
-          await navigator.clipboard.writeText(shareContent);
-          toast.success('Coupon details copied to clipboard!');
-          break;
-
-        case 'native':
-          if (navigator.share) {
-            await navigator.share({
-              title: `${coupon.code} - Special Discount Coupon`,
-              text: shareContent,
-              url: websiteUrl
-            });
-            toast.success('Shared successfully!');
-          } else {
-            // If Web Share API is not supported, show all sharing options
-            const shareData = {
-              title: `${coupon.code} - Special Discount Coupon`,
-              text: shareContent,
-              url: websiteUrl
-            };
-            
-            // Create a temporary element to trigger system share
-            const shareButton = document.createElement('button');
-            shareButton.addEventListener('click', async () => {
-              try {
-                await navigator.share(shareData);
-                toast.success('Shared successfully!');
-              } catch (error) {
-                if (error.name !== 'AbortError') {
-                  // Fallback to clipboard if sharing fails
-                  await navigator.clipboard.writeText(shareContent);
-                  toast.success('Copied to clipboard (Sharing not supported)');
-                }
-              }
-            });
-            shareButton.click();
-            shareButton.remove();
-          }
-          break;
-
-        default:
-          await navigator.clipboard.writeText(shareContent);
-          toast.success('Copied to clipboard');
-      }
-    } catch (error) {
-      console.error('Error sharing coupon:', error);
-      // Fallback to copy
-      try {
-        await navigator.clipboard.writeText(shareContent);
-        toast.success('Coupon details copied to clipboard!');
-      } catch (copyError) {
-        toast.error('Failed to share coupon');
-      }
-    }
-    setShowShareMenu(null);
-  };
 
   useEffect(() => {
     fetchCoupons();
   }, []);
-
-  // Close share menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showShareMenu && !event.target.closest('.share-menu-container')) {
-        setShowShareMenu(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showShareMenu]);
 
   const fetchCoupons = async () => {
     try {
@@ -232,22 +125,6 @@ Don't miss out on this amazing offer! 🚀`;
     
     return matchesSearch && matchesStatus;
   });
-
-  const getShareOptionLabel = (option) => {
-    const labels = {
-      copy: 'Copy to Clipboard',
-      native: 'Share via Apps'
-    };
-    return labels[option] || option;
-  };
-
-  const getShareOptionIcon = (option) => {
-    const icons = {
-      copy: <FiCopy className="text-xs" />,
-      native: <FiShare2 className="text-xs" />
-    };
-    return icons[option] || <FiShare2 className="text-xs" />;
-  };
 
   if (loading) {
     return (
@@ -368,7 +245,7 @@ Don't miss out on this amazing offer! 🚀`;
                   </p>
                 </div>
 
-                {/* Actions Section */}
+                {/* Toggle Switch */}
                 <div className="flex flex-row sm:flex-col items-center sm:items-end gap-4 sm:gap-2">
                   <div className="text-left sm:text-right">
                     <p className="text-sm text-richblack-400 mb-1">Usage</p>
@@ -386,62 +263,29 @@ Don't miss out on this amazing offer! 🚀`;
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-row sm:flex-col items-center gap-3">
-                    {/* Share Button */}
-                    <div className="relative share-menu-container">
-                      <button
-                        onClick={() => setShowShareMenu(showShareMenu === coupon._id ? null : coupon._id)}
-                        className="flex items-center gap-1 px-2 py-1 text-yellow-50 hover:text-yellow-100 transition-colors"
-                        title="Share Coupon"
-                      >
-                        <FiShare2 className="text-sm" />
-                        <span className="text-xs">Share</span>
-                      </button>
-
-                      {/* Dynamic Share Menu - Matching existing design */}
-                      {showShareMenu === coupon._id && (
-                        <div className="absolute right-0 top-full mt-1 bg-richblack-700 border border-richblack-600 rounded-md shadow-lg z-50 min-w-[140px]">
-                          <div className="py-1">
-                            {enabledShareOptions.map((option) => (
-                              <button
-                                key={option}
-                                onClick={() => handleShare(coupon, option)}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-richblack-300 hover:bg-richblack-600 hover:text-richblack-100 transition-colors text-left"
-                              >
-                                {getShareOptionIcon(option)}
-                                {getShareOptionLabel(option)}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Toggle Switch */}
-                    <div className="flex flex-col items-center gap-2">
-                      <span className={`text-xs font-medium ${coupon.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                        {coupon.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                      <button
-                        onClick={() => handleToggleStatus(coupon._id)}
-                        disabled={toggleLoading[coupon._id]}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-richblack-800 ${
-                          coupon.isActive
-                            ? 'bg-green-500 focus:ring-green-500'
-                            : 'bg-richblack-600 focus:ring-richblack-500'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                            coupon.isActive ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                      {toggleLoading[coupon._id] && (
-                        <div className="animate-spin rounded-full h-3 w-3 border border-richblack-400 border-t-transparent"></div>
-                      )}
-                    </div>
+                  {/* Modern Toggle Switch */}
+                  <div className="flex flex-col items-center gap-2">
+                    <span className={`text-xs font-medium ${coupon.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                      {coupon.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <button
+                      onClick={() => handleToggleStatus(coupon._id)}
+                      disabled={toggleLoading[coupon._id]}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-richblack-800 ${
+                        coupon.isActive
+                          ? 'bg-green-500 focus:ring-green-500'
+                          : 'bg-richblack-600 focus:ring-richblack-500'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                          coupon.isActive ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    {toggleLoading[coupon._id] && (
+                      <div className="animate-spin rounded-full h-3 w-3 border border-richblack-400 border-t-transparent"></div>
+                    )}
                   </div>
                 </div>
               </div>

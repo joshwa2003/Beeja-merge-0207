@@ -84,8 +84,6 @@ const VideoDetails = () => {
       const nextSectionId = courseSectionData[currentSectionIndx + 1]._id
       const nextSubSectionId = courseSectionData[currentSectionIndx + 1].subSection[0]._id
       navigate(`/view-course/${courseId}/section/${nextSectionId}/sub-section/${nextSubSectionId}`)
-    } else {
-      navigate(`/dashboard/enrolled-courses`)
     }
   }, [courseSectionData, sectionId, subSectionId, courseId, navigate])
 
@@ -220,22 +218,24 @@ const VideoDetails = () => {
               />
 
               <div className="mt-10 flex min-w-[250px] justify-center gap-x-4 text-xl">
-                {!isFirstVideo() && (
-                  <button
-                    disabled={loading}
-                    onClick={goToPrevVideo}
-                    className="blackButton"
-                  >
-                    Prev
-                  </button>
-                )}
+              {!isFirstVideo && (
+                <button
+                  disabled={loading}
+                  onClick={goToPrevVideo}
+                  className="blackButton"
+                >
+                  Prev
+                </button>
+              )}
+              {!isLastVideo && (
                 <button
                   disabled={loading}
                   onClick={goToNextVideo}
                   className="blackButton"
                 >
-                  {isLastVideo() ? "Go to Course" : "Next"}
+                  Next
                 </button>
+              )}
               </div>
             </div>
           )}

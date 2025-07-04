@@ -30,11 +30,6 @@ const questionSchema = new mongoose.Schema({
             type: String
         }
     ],
-    answers: [
-        {
-            type: String // Array of answers for match the following questions
-        }
-    ],
     correctAnswers: [
         {
             type: Number // Array of indices for multiple choice questions
@@ -42,10 +37,6 @@ const questionSchema = new mongoose.Schema({
     ],
     correctAnswer: {
         type: Number // Single index for single answer questions
-    },
-    keywords: {
-        type: [String], // Array of keywords for short answer questions
-        default: []
     },
     // Code solving specific fields
     programmingLanguage: {

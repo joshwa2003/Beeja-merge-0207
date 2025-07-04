@@ -6,26 +6,17 @@ import { RiDeleteBin6Line } from 'react-icons/ri'
 
 
 
-export default function RequirementsField({ name, label, register, setValue, errors, initialData }) {
+export default function RequirementsField({ name, label, register, setValue, errors, }) {
   const { editCourse, course } = useSelector((state) => state.course)
   const [requirement, setRequirement] = useState("")
   const [requirementsList, setRequirementsList] = useState([])
 
   useEffect(() => {
-    // Priority: initialData prop > Redux state > empty array
-    let initialRequirements = [];
-    
-    if (initialData && Array.isArray(initialData)) {
-      // Use initialData prop if provided (for Admin context)
-      initialRequirements = initialData;
-    } else if (editCourse && course?.instructions) {
-      // Use Redux state if in edit mode (for regular course editing)
-      initialRequirements = course.instructions;
+    if (editCourse) {
+      setRequirementsList(course?.instructions)
     }
-    
-    setRequirementsList(initialRequirements);
-    register(name, { required: true, validate: (value) => value.length > 0 }, initialRequirements);
-  }, [initialData, editCourse, course?.instructions])
+    register(name, { required: true, validate: (value) => value.length > 0 }, requirementsList)
+  }, [])
 
   useEffect(() => {
     setValue(name, requirementsList)

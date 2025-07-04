@@ -21,7 +21,7 @@ exports.generateCertificate = async (req, res) => {
     if (!isEnrolled) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. You are not enrolled in this course.',
+        
       });
     }
     
