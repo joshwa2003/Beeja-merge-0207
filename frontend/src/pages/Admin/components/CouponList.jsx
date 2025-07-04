@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { getAllCoupons, toggleCouponStatus } from '../../../services/operations/couponAPI';
 import { toast } from 'react-hot-toast';
 import CouponDetailsModal from '../../../components/common/CouponDetailsModal';
-import { FiTag, FiCalendar, FiUsers, FiDollarSign, FiClock, FiEye, FiSearch, FiX, FiShare2, FiCopy, FiMail, FiMessageSquare } from 'react-icons/fi';
+import { FiTag, FiCalendar, FiUsers, FiDollarSign, FiClock, FiEye, FiSearch, FiX, FiShare2, FiCopy } from 'react-icons/fi';
 
 export default function CouponList() {
   const { token } = useSelector((state) => state.auth);
@@ -16,9 +16,10 @@ export default function CouponList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showShareMenu, setShowShareMenu] = useState(null);
 
-  // Admin configurable share options - only copy to clipboard
+  // Admin configurable share options
   const [enabledShareOptions] = useState([
-    'copy'
+    'copy',
+    'native'
   ]);
 
   const generateCouponShareContent = (coupon) => {
@@ -58,37 +59,43 @@ Don't miss out on this amazing offer! 🚀`;
           break;
 
         case 'native':
-          // Use Web Share API to show all available apps
           if (navigator.share) {
             await navigator.share({
               title: `${coupon.code} - Special Discount Coupon`,
               text: shareContent,
               url: websiteUrl
             });
-            toast.success('Coupon shared successfully!');
+            toast.success('Shared successfully!');
           } else {
-            // Fallback for browsers that don't support Web Share API
-            await navigator.clipboard.writeText(shareContent);
-            toast.success('Coupon details copied to clipboard! (Native sharing not supported)');
+            // If Web Share API is not supported, show all sharing options
+            const shareData = {
+              title: `${coupon.code} - Special Discount Coupon`,
+              text: shareContent,
+              url: websiteUrl
+            };
+            
+            // Create a temporary element to trigger system share
+            const shareButton = document.createElement('button');
+            shareButton.addEventListener('click', async () => {
+              try {
+                await navigator.share(shareData);
+                toast.success('Shared successfully!');
+              } catch (error) {
+                if (error.name !== 'AbortError') {
+                  // Fallback to clipboard if sharing fails
+                  await navigator.clipboard.writeText(shareContent);
+                  toast.success('Copied to clipboard (Sharing not supported)');
+                }
+              }
+            });
+            shareButton.click();
+            shareButton.remove();
           }
-          break;
-
-        case 'email':
-          const emailSubject = encodeURIComponent(`Special Discount Coupon - ${coupon.code}`);
-          const emailBody = encodeURIComponent(shareContent);
-          window.open(`mailto:?subject=${emailSubject}&body=${emailBody}`, '_blank');
-          toast.success('Email client opened with coupon details!');
-          break;
-
-        case 'sms':
-          const smsBody = encodeURIComponent(shareContent);
-          window.open(`sms:?body=${smsBody}`, '_blank');
-          toast.success('SMS app opened with coupon details!');
           break;
 
         default:
           await navigator.clipboard.writeText(shareContent);
-          toast.success('Coupon details copied to clipboard!');
+          toast.success('Copied to clipboard');
       }
     } catch (error) {
       console.error('Error sharing coupon:', error);
@@ -229,9 +236,7 @@ Don't miss out on this amazing offer! 🚀`;
   const getShareOptionLabel = (option) => {
     const labels = {
       copy: 'Copy to Clipboard',
-      native: 'Share via Apps',
-      email: 'Share via Email',
-      sms: 'Share via SMS'
+      native: 'Share via Apps'
     };
     return labels[option] || option;
   };
@@ -239,9 +244,7 @@ Don't miss out on this amazing offer! 🚀`;
   const getShareOptionIcon = (option) => {
     const icons = {
       copy: <FiCopy className="text-xs" />,
-      native: <FiShare2 className="text-xs" />,
-      email: <FiMail className="text-xs" />,
-      sms: <FiMessageSquare className="text-xs" />
+      native: <FiShare2 className="text-xs" />
     };
     return icons[option] || <FiShare2 className="text-xs" />;
   };
