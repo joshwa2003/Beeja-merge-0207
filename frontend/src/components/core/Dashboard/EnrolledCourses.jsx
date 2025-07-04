@@ -127,14 +127,37 @@ export default function EnrolledCourses() {
         {enrolledCourses?.map((course, i) => (
           <div
             key={i}
-            className="group bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 hover:border-purple-500/30 transition-all duration-300"
+            className={`group bg-slate-800/50 backdrop-blur-xl rounded-2xl border transition-all duration-300 ${
+              course.isDeactivated 
+                ? 'border-red-500/50 hover:border-red-500/70' 
+                : 'border-slate-700/50 hover:border-purple-500/30'
+            }`}
           >
+            {/* Deactivation Warning Banner */}
+            {course.isDeactivated && (
+              <div className="bg-red-500/10 border-b border-red-500/20 p-4 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0">
+                    <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-red-400 font-semibold text-sm">Course Deactivated</h4>
+                    <p className="text-red-300/80 text-xs mt-1">
+                      This course has been deactivated by the admin. Please contact the administrator for further information.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="p-6">
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Thumbnail */}
                 <div 
-                  className="relative cursor-pointer"
-                  onClick={() => handleCourseNavigation(course)}
+                  className={`relative ${course.isDeactivated ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                  onClick={() => !course.isDeactivated && handleCourseNavigation(course)}
                 >
                   <div className="relative">
                     <Img
@@ -144,14 +167,25 @@ export default function EnrolledCourses() {
                       width={80}
                       height={80}
                     />
+                    {course.isDeactivated && (
+                      <div className="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center">
+                        <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Course Info */}
                 <div className="flex-1 min-w-0">
                   <h3 
-                    className="text-lg font-semibold text-white mb-2 cursor-pointer hover:text-purple-400 transition-colors duration-200"
-                    onClick={() => handleCourseNavigation(course)}
+                    className={`text-lg font-semibold mb-2 transition-colors duration-200 ${
+                      course.isDeactivated 
+                        ? 'text-slate-400 cursor-not-allowed' 
+                        : 'text-white cursor-pointer hover:text-purple-400'
+                    }`}
+                    onClick={() => !course.isDeactivated && handleCourseNavigation(course)}
                   >
                     {course.courseName}
                   </h3>
@@ -168,7 +202,9 @@ export default function EnrolledCourses() {
                         </svg>
                         <span className="text-sm">{course?.totalDuration}</span>
                       </div>
-                      <span className="text-sm font-medium text-purple-400">
+                      <span className={`text-sm font-medium ${
+                        course.isDeactivated ? 'text-slate-500' : 'text-purple-400'
+                      }`}>
                         {course.progressPercentage || 0}% Complete
                       </span>
                     </div>
@@ -176,7 +212,7 @@ export default function EnrolledCourses() {
                       completed={course.progressPercentage || 0}
                       height="8px"
                       isLabelVisible={false}
-                      bgColor="linear-gradient(90deg, #8B5CF6, #3B82F6)"
+                      bgColor={course.isDeactivated ? "#6B7280" : "linear-gradient(90deg, #8B5CF6, #3B82F6)"}
                       baseBgColor="#1F2937"
                       className="rounded-full"
                     />
@@ -184,14 +220,23 @@ export default function EnrolledCourses() {
 
                   {/* Actions */}
                   <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-4">
-                    <button
-                      onClick={() => handleCourseNavigation(course)}
-                      className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-colors duration-200 text-sm font-medium"
-                    >
-                      Continue Learning
-                    </button>
+                    {course.isDeactivated ? (
+                      <button
+                        disabled
+                        className="px-4 py-2 bg-slate-600/20 text-slate-500 rounded-xl cursor-not-allowed text-sm font-medium"
+                      >
+                        Course Unavailable
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleCourseNavigation(course)}
+                        className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl hover:bg-purple-500/20 transition-colors duration-200 text-sm font-medium"
+                      >
+                        Continue Learning
+                      </button>
+                    )}
                     
-                    {course.progressPercentage === 100 && (
+                    {course.progressPercentage === 100 && !course.isDeactivated && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()

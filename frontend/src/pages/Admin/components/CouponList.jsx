@@ -3,7 +3,8 @@ import { useSelector } from 'react-redux';
 import { getAllCoupons, toggleCouponStatus } from '../../../services/operations/couponAPI';
 import { toast } from 'react-hot-toast';
 import CouponDetailsModal from '../../../components/common/CouponDetailsModal';
-import { FiTag, FiCalendar, FiUsers, FiDollarSign, FiClock, FiEye, FiSearch, FiX } from 'react-icons/fi';
+import CouponShareModal from '../../../components/common/CouponShareModal';
+import { FiTag, FiCalendar, FiUsers, FiDollarSign, FiClock, FiEye, FiSearch, FiX, FiShare2 } from 'react-icons/fi';
 
 export default function CouponList() {
   const { token } = useSelector((state) => state.auth);
@@ -12,11 +13,27 @@ export default function CouponList() {
   const [toggleLoading, setToggleLoading] = useState({});
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [couponToShare, setCouponToShare] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     fetchCoupons();
+
+    // Add event listener for share coupon event
+    const handleShareCouponEvent = (event) => {
+      const coupon = event.detail;
+      setCouponToShare(coupon);
+      setShowShareModal(true);
+    };
+
+    window.addEventListener('shareCoupon', handleShareCouponEvent);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('shareCoupon', handleShareCouponEvent);
+    };
   }, []);
 
   const fetchCoupons = async () => {
@@ -53,6 +70,12 @@ export default function CouponList() {
   const handleCouponClick = (coupon) => {
     setSelectedCoupon(coupon);
     setShowDetailsModal(true);
+  };
+
+  const handleShareCoupon = (coupon, event) => {
+    event.stopPropagation(); // Prevent triggering the coupon click
+    setCouponToShare(coupon);
+    setShowShareModal(true);
   };
 
   const formatDate = (dateString) => {
@@ -245,7 +268,7 @@ export default function CouponList() {
                   </p>
                 </div>
 
-                {/* Toggle Switch */}
+                {/* Action Buttons and Toggle Switch */}
                 <div className="flex flex-row sm:flex-col items-center sm:items-end gap-4 sm:gap-2">
                   <div className="text-left sm:text-right">
                     <p className="text-sm text-richblack-400 mb-1">Usage</p>
@@ -263,29 +286,41 @@ export default function CouponList() {
                     )}
                   </div>
 
-                  {/* Modern Toggle Switch */}
-                  <div className="flex flex-col items-center gap-2">
-                    <span className={`text-xs font-medium ${coupon.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                      {coupon.isActive ? 'Active' : 'Inactive'}
-                    </span>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {/* Share Button */}
                     <button
-                      onClick={() => handleToggleStatus(coupon._id)}
-                      disabled={toggleLoading[coupon._id]}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-richblack-800 ${
-                        coupon.isActive
-                          ? 'bg-green-500 focus:ring-green-500'
-                          : 'bg-richblack-600 focus:ring-richblack-500'
-                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      onClick={(e) => handleShareCoupon(coupon, e)}
+                      className="p-2 bg-richblack-700 hover:bg-richblack-600 border border-richblack-600 hover:border-yellow-500/50 rounded-lg transition-all duration-200 group"
+                      title="Share Coupon"
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                          coupon.isActive ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
+                      <FiShare2 className="text-richblack-300 group-hover:text-yellow-400 text-sm" />
                     </button>
-                    {toggleLoading[coupon._id] && (
-                      <div className="animate-spin rounded-full h-3 w-3 border border-richblack-400 border-t-transparent"></div>
-                    )}
+
+                    {/* Modern Toggle Switch */}
+                    <div className="flex flex-col items-center gap-2">
+                      <span className={`text-xs font-medium ${coupon.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                        {coupon.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                      <button
+                        onClick={() => handleToggleStatus(coupon._id)}
+                        disabled={toggleLoading[coupon._id]}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-richblack-800 ${
+                          coupon.isActive
+                            ? 'bg-green-500 focus:ring-green-500'
+                            : 'bg-richblack-600 focus:ring-richblack-500'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                            coupon.isActive ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      {toggleLoading[coupon._id] && (
+                        <div className="animate-spin rounded-full h-3 w-3 border border-richblack-400 border-t-transparent"></div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -357,6 +392,12 @@ export default function CouponList() {
         isOpen={showDetailsModal}
         onClose={() => setShowDetailsModal(false)}
         coupon={selectedCoupon}
+      />
+
+      <CouponShareModal 
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        coupon={couponToShare}
       />
     </>
   );

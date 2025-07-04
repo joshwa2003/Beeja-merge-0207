@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiTag, FiCalendar, FiUsers, FiPercent, FiDollarSign, FiClock, FiShoppingCart } from 'react-icons/fi';
+import { FiX, FiTag, FiCalendar, FiUsers, FiPercent, FiDollarSign, FiClock, FiShoppingCart, FiShare2 } from 'react-icons/fi';
 
 const CouponDetailsModal = ({ isOpen, onClose, coupon }) => {
   if (!coupon) return null;
@@ -61,12 +61,31 @@ const CouponDetailsModal = ({ isOpen, onClose, coupon }) => {
                 <FiTag className="text-yellow-50 text-2xl" />
                 <h2 className="text-2xl font-bold text-richblack-5">Coupon Details</h2>
               </div>
-              <button
-                onClick={onClose}
-                className="text-richblack-400 hover:text-richblack-200 transition-colors p-2 hover:bg-richblack-700 rounded-lg"
-              >
-                <FiX size={24} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    onClose();
+                    // Small delay to prevent modal overlap
+                    setTimeout(() => {
+                      if (typeof window !== 'undefined') {
+                        // Create and dispatch a custom event
+                        const event = new CustomEvent('shareCoupon', { detail: coupon });
+                        window.dispatchEvent(event);
+                      }
+                    }, 100);
+                  }}
+                  className="text-richblack-400 hover:text-yellow-50 transition-colors p-2 hover:bg-richblack-700 rounded-lg group"
+                  title="Share Coupon"
+                >
+                  <FiShare2 size={20} className="group-hover:scale-110 transition-transform" />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="text-richblack-400 hover:text-richblack-200 transition-colors p-2 hover:bg-richblack-700 rounded-lg"
+                >
+                  <FiX size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Coupon Code and Status */}

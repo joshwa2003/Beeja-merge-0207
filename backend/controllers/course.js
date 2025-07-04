@@ -429,7 +429,40 @@ exports.getFullCourseDetails = async (req, res) => {
                     message: 'You are not enrolled in this course'
                 });
             }
-            console.log('Student access granted - enrolled in course');
+
+            // Check if course access is active (order status validation)
+            const isFree = course.courseType === 'Free' || course.adminSetFree;
+            if (!isFree) {
+                const Order = require('../models/order');
+                const activeOrder = await Order.findOne({
+                    user: userId,
+                    course: courseId,
+                    status: true
+                });
+
+                if (!activeOrder) {
+                    // Check if there's an inactive order
+                    const inactiveOrder = await Order.findOne({
+                        user: userId,
+                        course: courseId,
+                        status: false
+                    });
+
+                    if (inactiveOrder) {
+                        return res.status(403).json({
+                            success: false,
+                            message: 'This course has been deactivated by the admin. Please contact the administrator for further information.',
+                            isDeactivated: true
+                        });
+                    } else {
+                        return res.status(403).json({
+                            success: false,
+                            message: 'You do not have an active enrollment for this course'
+                        });
+                    }
+                }
+            }
+            console.log('Student access granted - enrolled in course with active order');
         }
         else {
             return res.status(403).json({
